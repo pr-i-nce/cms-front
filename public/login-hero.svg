@@ -1,0 +1,50 @@
+<svg width="720" height="520" viewBox="0 0 720 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Church community illustration">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f3f7f6"/>
+      <stop offset="100%" stop-color="#e7f2ee"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.4"/>
+    </linearGradient>
+  </defs>
+  <rect width="720" height="520" rx="28" fill="url(#bg)"/>
+  <g opacity="0.6">
+    <circle cx="88" cy="92" r="60" fill="#b9ddd3"/>
+    <circle cx="640" cy="110" r="52" fill="#f3d39c"/>
+    <circle cx="620" cy="430" r="70" fill="#c7d6f5"/>
+  </g>
+  <g transform="translate(120 140)">
+    <rect x="0" y="80" width="420" height="220" rx="20" fill="#ffffff"/>
+    <rect x="24" y="104" width="120" height="14" rx="7" fill="#d8ebe6"/>
+    <rect x="24" y="130" width="200" height="10" rx="5" fill="#e6f2ef"/>
+    <rect x="24" y="152" width="170" height="10" rx="5" fill="#e6f2ef"/>
+    <rect x="24" y="186" width="220" height="12" rx="6" fill="#d8ebe6"/>
+    <rect x="24" y="212" width="160" height="10" rx="5" fill="#e6f2ef"/>
+    <rect x="24" y="236" width="120" height="10" rx="5" fill="#e6f2ef"/>
+    <rect x="300" y="110" width="88" height="120" rx="12" fill="#f6efe1"/>
+    <rect x="315" y="128" width="58" height="8" rx="4" fill="#f2d9ac"/>
+    <rect x="315" y="146" width="44" height="8" rx="4" fill="#f2d9ac"/>
+    <rect x="315" y="164" width="52" height="8" rx="4" fill="#f2d9ac"/>
+  </g>
+  <g transform="translate(90 320)">
+    <rect x="0" y="0" width="170" height="130" rx="16" fill="url(#glass)" stroke="#dce7e3"/>
+    <rect x="16" y="18" width="80" height="10" rx="5" fill="#cfe4de"/>
+    <rect x="16" y="38" width="120" height="10" rx="5" fill="#e5efec"/>
+    <rect x="16" y="58" width="90" height="10" rx="5" fill="#e5efec"/>
+    <circle cx="132" cy="80" r="24" fill="#b9ddd3"/>
+  </g>
+  <g transform="translate(470 300)">
+    <rect x="0" y="0" width="170" height="150" rx="16" fill="url(#glass)" stroke="#e3d3b6"/>
+    <rect x="16" y="18" width="90" height="10" rx="5" fill="#efd9b8"/>
+    <rect x="16" y="38" width="120" height="10" rx="5" fill="#f4e5cc"/>
+    <rect x="16" y="58" width="70" height="10" rx="5" fill="#f4e5cc"/>
+    <rect x="16" y="90" width="120" height="34" rx="10" fill="#f0c778"/>
+  </g>
+  <g transform="translate(310 60)">
+    <path d="M40 0 L80 40 L80 120 L0 120 L0 40 Z" fill="#ffffff" stroke="#dfe8e5"/>
+    <rect x="18" y="60" width="44" height="60" rx="8" fill="#f4f7f6"/>
+    <rect x="34" y="24" width="12" height="30" fill="#b9ddd3"/>
+  </g>
+</svg>
