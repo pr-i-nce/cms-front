@@ -220,6 +220,19 @@ const UserManagement = () => {
     );
   }
 
+  const refreshUsersAndGroups = async () => {
+    const usersRes = await listUsers({ page: 1, pageSize: 500 });
+    setUsers(usersRes.data);
+    const userGroupsRes = await Promise.all(
+      usersRes.data.map((u) => getUserGroups(u.id)),
+    );
+    const nextUserGroups: Record<string, string[]> = {};
+    userGroupsRes.forEach((res, i) => {
+      nextUserGroups[usersRes.data[i].id] = res.data.groupIds;
+    });
+    setUserGroups(nextUserGroups);
+  };
+
   const handleCreateUser = async (values: { name: string; email: string; phone: string; role: string; status: "Active" | "Inactive"; password?: string; memberId?: string; groupIds?: string[]; }) => {
     const ok = await confirm({
       title: "Create user",
@@ -241,8 +254,7 @@ const UserManagement = () => {
       return;
     }
     await createUser({ ...values, groupIds });
-    const usersRes = await listUsers({ page: 1, pageSize: 500 });
-    setUsers(usersRes.data);
+    await refreshUsersAndGroups();
     toast.success("User created successfully");
     setIsAddUserOpen(false);
   };
@@ -256,9 +268,20 @@ const UserManagement = () => {
     if (!ok) return;
     if (editingUserId) {
       const { memberId, groupIds, ...payload } = values;
-      await updateUser(editingUserId, payload);
-      const usersRes = await listUsers({ page: 1, pageSize: 500 });
-      setUsers(usersRes.data);
+      if (has("USER_ASSIGN_GROUPS")) {
+        const nextGroupIds = groupIds ?? [];
+        if (!nextGroupIds.length) {
+          toast.error("Select at least one group");
+          return;
+        }
+        await Promise.all([
+          updateUser(editingUserId, payload),
+          assignUserGroups(editingUserId, { groupIds: nextGroupIds }),
+        ]);
+      } else {
+        await updateUser(editingUserId, payload);
+      }
+      await refreshUsersAndGroups();
     }
     toast.success("User updated successfully");
     setEditingUserId(null);
@@ -629,7 +652,10 @@ const UserManagement = () => {
           phone: editingUser.phone || "",
           role: editingUser.role,
           status: editingUser.status,
+          groupIds: userGroups[editingUser.id] ?? [],
         } : undefined}
+        groups={groups.map((g) => ({ id: g.id, name: g.name }))}
+        showGroups={has("USER_ASSIGN_GROUPS")}
         onSubmit={handleEditUser}
       />
 
