@@ -42,8 +42,8 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
     >
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 h-16 border-b border-sidebar-border">
-        <div className="bg-sidebar-primary rounded-lg p-1.5 shrink-0">
-          <Church className="h-5 w-5 text-sidebar-primary-foreground" />
+        <div className="shrink-0">
+          <img src="/favicon.ico" alt="Church logo" className="h-6 w-6" />
         </div>
         {!collapsed && (
           <span className="font-bold text-sm text-sidebar-accent-foreground truncate">

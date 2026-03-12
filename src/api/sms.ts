@@ -9,4 +9,5 @@ export const listSmsTemplates = () => apiGet<any[]>("/api/sms/templates");
 
 export const listSmsSegments = () => apiGet<any[]>("/api/sms/segments");
 
+
 export const getSmsBalance = () => apiPost<any>("/api/sms/balance", {});

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Church,
   Eye,
   EyeOff,
   ArrowRight,
@@ -53,29 +52,29 @@ const Login = () => {
         <div className="w-full grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="bg-primary/10 p-2.5">
-                <Church className="h-5 w-5 text-primary" />
+              <div>
+                <img src="/favicon.ico" alt="Church logo" className="h-8 w-8" />
               </div>
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Peniel Church</p>
-                <h1 className="text-3xl font-semibold tracking-tight">Executive Console</h1>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Peniel Christian Church</p>
+                <h1 className="text-3xl font-semibold tracking-tight">Church Management Console</h1>
               </div>
             </div>
             <p className="text-muted-foreground max-w-lg">
-              A focused workspace for leadership, member care, and communication. Clean, secure, and fast.
+              Manage members, ministries, and communication from one secure workspace.
             </p>
             <div className="grid gap-3 text-sm text-muted-foreground">
               <div className="flex items-center justify-between border bg-white/80 px-4 py-3">
-                <span>Operational visibility</span>
-                <span className="text-xs font-medium text-foreground">Real-time</span>
+                <span>Member records</span>
+                <span className="text-xs font-medium text-foreground">Up to date</span>
               </div>
               <div className="flex items-center justify-between border bg-white/80 px-4 py-3">
-                <span>Secure access</span>
-                <span className="text-xs font-medium text-foreground">RBAC enforced</span>
+                <span>Ministry oversight</span>
+                <span className="text-xs font-medium text-foreground">Structured</span>
               </div>
               <div className="flex items-center justify-between border bg-white/80 px-4 py-3">
-                <span>Unified communication</span>
-                <span className="text-xs font-medium text-foreground">SMS ready</span>
+                <span>SMS communication</span>
+                <span className="text-xs font-medium text-foreground">Ready</span>
               </div>
             </div>
           </div>
@@ -83,8 +82,8 @@ const Login = () => {
           <div className="border bg-white/90 p-8 shadow-xl backdrop-blur">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Welcome back</p>
-                <h2 className="text-2xl font-semibold">Sign in</h2>
+                <p className="text-sm text-muted-foreground">Welcome</p>
+                <h2 className="text-2xl font-semibold">Sign in to continue</h2>
               </div>
               <div className="border px-3 py-1 text-xs text-muted-foreground">Secure</div>
             </div>
@@ -136,13 +135,13 @@ const Login = () => {
               </div>
 
               <Button type="submit" className="w-full gap-2" disabled={loading}>
-                {loading ? "Signing in..." : "Sign In"}
+                {loading ? "Signing in..." : "Sign in"}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </form>
 
             <p className="mt-6 text-xs text-muted-foreground">
-              Use your authorized ministry account to access leadership tools.
+              Use your staff account to access church administration tools.
             </p>
           </div>
         </div>
