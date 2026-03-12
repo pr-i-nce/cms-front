@@ -35,4 +35,4 @@ jobs:
           port: ${{ secrets.FTP_PORT || 21 }}
           local-dir: ./dist/ 
           server-dir: ./ 
-          delete-removed: true
+          delete-removed: false
