@@ -1,4 +1,4 @@
-name: Deploy CMS to cPanel
+name: Deploy Frontend to cPanel
 
 on:
   push:
@@ -13,12 +13,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build 
+        env:
+          VITE_API_URL: https://cms.penielchristianchurchkitui.com
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          port: ${{ secrets.FTP_PORT }}
-          local-dir: ./dist/
-          server-dir: cms.church/DWH-CMS_FRONT/
+          port: ${{ secrets.FTP_PORT || 21 }}
+          local-dir: ./dist/ 
+          server-dir: ./ 
+          delete-removed: true
