@@ -100,7 +100,7 @@ const MemberFormDialog = ({
             {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
           </div>
           <div className="grid gap-2">
-            <Label>Email</Label>
+            <Label>Email (optional)</Label>
             <Input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} />
           </div>
           <div className="grid gap-2">

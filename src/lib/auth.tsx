@@ -28,7 +28,7 @@ const LOCAL_USER_KEY = "userId";
 const LOCAL_PERM_KEY = "permissions";
 const LOCAL_EXPIRES_KEY = "sessionExpiresAt";
 const LOCAL_CSRF_KEY = "csrfToken";
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8081";
+const API_BASE_URL = "https://cms.penielchristianchurchkitui.com/";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const expiryTimerRef = useRef<number | null>(null);

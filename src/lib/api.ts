@@ -13,7 +13,7 @@ export type ApiResponse<T> = {
   meta: ApiMeta | null;
 };
 
-const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8081";
+const baseUrl = "https://cms.penielchristianchurchkitui.com/";
 
 const buildUrl = (path: string, params?: Record<string, string | number | undefined>) => {
   const url = new URL(path, baseUrl);
