@@ -93,14 +93,21 @@ const MemberProfile = () => {
   }, [id]);
 
   const memberDeptNames = useMemo(() => {
-    return memberDeptAssignments
+    const entries = memberDeptAssignments
       .map((entry) => {
         const name = departments.find((d) => d.id === entry.departmentId)?.name;
         if (!name) return null;
         return { name, role: entry.role || "Member" };
       })
       .filter(Boolean) as { name: string; role: string }[];
-  }, [memberDeptAssignments, departments]);
+    if (member?.department) {
+      const exists = entries.some((item) => item.name === member.department);
+      if (!exists) {
+        entries.push({ name: member.department, role: member.role || "Member" });
+      }
+    }
+    return entries;
+  }, [memberDeptAssignments, departments, member]);
 
   const memberCommitteeNames = useMemo(() => {
     return memberCommitteeAssignments

@@ -103,6 +103,7 @@ const SMSCenter = () => {
   const [recipient, setRecipient] = useState("");
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [message, setMessage] = useState("");
+  const [greeting, setGreeting] = useState("");
   const [sendMode, setSendMode] = useState("auto");
   const [scheduledAt, setScheduledAt] = useState("");
 
@@ -162,15 +163,8 @@ const SMSCenter = () => {
       setLoading(true);
       setLoadError(null);
       try {
-        const [templatesRes, balanceRes] = await Promise.all([
-          listSmsTemplates(),
-          has("SMS_VIEW") ? getSmsBalance() : Promise.resolve({ data: null }),
-        ]);
+        const templatesRes = await listSmsTemplates();
         setTemplates(templatesRes.data);
-        if (balanceRes?.data?.credit != null) {
-          const creditValue = Number(balanceRes.data.credit);
-          setBalance(Number.isFinite(creditValue) ? creditValue : null);
-        }
       } catch (err) {
         setLoadError(err instanceof Error ? err.message : "Failed to load data");
       } finally {
@@ -178,6 +172,34 @@ const SMSCenter = () => {
       }
     };
     load();
+  }, []);
+
+  useEffect(() => {
+    if (!has("SMS_VIEW")) {
+      setBalance(null);
+      return;
+    }
+    let active = true;
+    const loadBalance = async () => {
+      setBalance(null);
+      try {
+        const balanceRes = await getSmsBalance();
+        if (!active) return;
+        if (balanceRes?.data?.credit != null) {
+          const creditValue = Number(balanceRes.data.credit);
+          setBalance(Number.isFinite(creditValue) ? creditValue : null);
+        }
+      } catch {
+        if (!active) return;
+        setBalance(null);
+      } finally {
+        // no-op
+      }
+    };
+    loadBalance();
+    return () => {
+      active = false;
+    };
   }, [has]);
 
   useEffect(() => {
@@ -434,6 +456,13 @@ const SMSCenter = () => {
   const personalizeMessage = (base: string, name?: string) => {
     if (!personalize || !name) return base;
     const firstName = name.split(" ")[0] || name;
+    const prefix = greeting.trim();
+    if (prefix) {
+      if (prefix.includes("{name}")) {
+        return `${prefix.replaceAll("{name}", firstName)} ${base}`.trim();
+      }
+      return `${prefix} ${firstName}, ${base}`.trim();
+    }
     if (base.includes("{name}")) {
       return base.replaceAll("{name}", firstName);
     }
@@ -478,6 +507,7 @@ const SMSCenter = () => {
       recipientIds: recipientType === "selected" || recipientType === "pastors" ? selectedRecipients : undefined,
       recipientCategory: recipientType === "category" ? recipient : undefined,
       customNumber: recipientType === "custom" ? recipient : undefined,
+      greeting: greeting.trim() || undefined,
       message,
       personalize,
       sendMode: computedSendMode,
@@ -492,6 +522,7 @@ const SMSCenter = () => {
       toast.success("SMS sent successfully!");
     }
     setMessage("");
+    setGreeting("");
     setRecipient("");
   };
 
@@ -730,6 +761,20 @@ const SMSCenter = () => {
                   <Switch checked={personalize} onCheckedChange={setPersonalize} />
                 </div>
 
+                {personalize && (
+                  <div className="space-y-2">
+                    <Label>Greeting prefix</Label>
+                    <Input
+                      placeholder="Hi {name}"
+                      value={greeting}
+                      onChange={(e) => setGreeting(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Use {`{name}`} to control placement, or leave blank for default greeting.
+                    </p>
+                  </div>
+                )}
+
                 {has("SMS_SEND") && (
                   <Button onClick={handleSend} className="gap-2">
                     <Send className="h-4 w-4" /> Send SMS
@@ -821,8 +866,10 @@ const SMSCenter = () => {
                       {paginated.map((sms) => (
                     <TableRow key={sms.id} className="hover:bg-muted/30 transition-colors">
                       <TableCell className="max-w-[250px] truncate">{sms.message}</TableCell>
-                      <TableCell>
-                        <span className="text-sm">{sms.recipients}</span>
+                      <TableCell className="max-w-[220px]">
+                        <span className="text-sm truncate block" title={sms.recipients}>
+                          {sms.recipients}
+                        </span>
                         {sms.recipientCount > 1 && (
                           <span className="text-xs text-muted-foreground ml-1">({sms.recipientCount})</span>
                         )}

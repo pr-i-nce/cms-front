@@ -50,15 +50,40 @@ const MemberFormDialog = ({
     [defaultValues],
   );
   const [form, setForm] = useState<MemberFormValues>(mergedDefaults);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (open) {
       setForm(mergedDefaults);
+      setErrors({});
     }
   }, [open, mergedDefaults]);
 
   const update = (key: keyof MemberFormValues, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
+
+  const validate = () => {
+    const nextErrors: Record<string, string> = {};
+    if (!form.name.trim()) nextErrors.name = "Full name is required";
+    if (!form.phone.trim()) nextErrors.phone = "Phone is required";
+    if (!form.gender.trim()) nextErrors.gender = "Gender is required";
+    if (!form.department.trim()) nextErrors.department = "Department is required";
+    if (!form.role.trim()) nextErrors.role = "Role is required";
+    if (!form.status.trim()) nextErrors.status = "Status is required";
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const handleSubmit = () => {
+    if (!validate()) return;
+    onSubmit(form);
   };
 
   return (
@@ -72,6 +97,7 @@ const MemberFormDialog = ({
           <div className="grid gap-2">
             <Label>Full name</Label>
             <Input value={form.name} onChange={(e) => update("name", e.target.value)} />
+            {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
           </div>
           <div className="grid gap-2">
             <Label>Email</Label>
@@ -80,6 +106,7 @@ const MemberFormDialog = ({
           <div className="grid gap-2">
             <Label>Phone</Label>
             <Input value={form.phone} onChange={(e) => update("phone", e.target.value)} />
+            {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="grid gap-2">
@@ -91,6 +118,7 @@ const MemberFormDialog = ({
                   <SelectItem value="Female">Female</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.gender && <p className="text-xs text-destructive">{errors.gender}</p>}
             </div>
             <div className="grid gap-2">
               <Label>Status</Label>
@@ -101,6 +129,7 @@ const MemberFormDialog = ({
                   <SelectItem value="Inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.status && <p className="text-xs text-destructive">{errors.status}</p>}
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -113,6 +142,7 @@ const MemberFormDialog = ({
                 searchPlaceholder="Search departments..."
                 items={departments.map((dept) => ({ value: dept, label: dept }))}
               />
+              {errors.department && <p className="text-xs text-destructive">{errors.department}</p>}
             </div>
             <div className="grid gap-2">
               <Label>Role</Label>
@@ -123,12 +153,13 @@ const MemberFormDialog = ({
                 searchPlaceholder="Search roles..."
                 items={roles.map((role) => ({ value: role, label: role }))}
               />
+              {errors.role && <p className="text-xs text-destructive">{errors.role}</p>}
             </div>
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={() => onSubmit(form)}>Save</Button>
+          <Button onClick={handleSubmit}>Save</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

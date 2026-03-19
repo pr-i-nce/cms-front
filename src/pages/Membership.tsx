@@ -326,6 +326,10 @@ const Membership = () => {
     role: string;
     status: "Active" | "Inactive";
   }) => {
+    if (!values.name.trim() || !values.phone.trim() || !values.gender.trim() || !values.department.trim() || !values.role.trim() || !values.status) {
+      toast.error("Please fill in all required fields (email is optional)");
+      return;
+    }
     const ok = await confirm({
       title: "Create member",
       description: `Add ${values.name || "this member"} to the directory?`,
@@ -337,6 +341,8 @@ const Membership = () => {
       email: values.email,
       phone: values.phone,
       gender: values.gender,
+      department: values.department,
+      role: values.role,
       status: values.status,
     });
     await reloadMembers();
@@ -353,6 +359,10 @@ const Membership = () => {
     role: string;
     status: "Active" | "Inactive";
   }) => {
+    if (!values.name.trim() || !values.phone.trim() || !values.gender.trim() || !values.department.trim() || !values.role.trim() || !values.status) {
+      toast.error("Please fill in all required fields (email is optional)");
+      return;
+    }
     const ok = await confirm({
       title: "Save changes",
       description: `Update details for ${values.name || "this member"}?`,
@@ -365,6 +375,8 @@ const Membership = () => {
         email: values.email,
         phone: values.phone,
         gender: values.gender,
+        department: values.department,
+        role: values.role,
         status: values.status,
       });
       await reloadMembers();
