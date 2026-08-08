@@ -6,7 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import AppLayout from "@/components/layout/AppLayout";
 import { ConfirmProvider } from "@/components/shared/ConfirmProvider";
 import RequireAuth from "@/components/auth/RequireAuth";
-import SessionExpiredDialog from "@/components/auth/SessionExpiredDialog";
 import UiLatencyTracker from "@/components/shared/UiLatencyTracker";
 import Login from "./pages/Login";
 import Index from "./pages/Index";
@@ -39,7 +38,6 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
-            <SessionExpiredDialog />
             <UiLatencyTracker />
             <Routes>
               <Route path="/login" element={<Login />} />

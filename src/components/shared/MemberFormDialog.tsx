@@ -36,6 +36,16 @@ const emptyMember: MemberFormValues = {
   status: "Active",
 };
 
+const normalizeMemberValues = (values: Partial<MemberFormValues> | undefined): MemberFormValues => ({
+  name: values?.name ?? "",
+  email: values?.email ?? "",
+  phone: values?.phone ?? "",
+  gender: values?.gender ?? "Male",
+  department: values?.department ?? "",
+  role: values?.role ?? "",
+  status: values?.status ?? "Active",
+});
+
 const MemberFormDialog = ({
   open,
   onOpenChange,
@@ -46,7 +56,7 @@ const MemberFormDialog = ({
   onSubmit,
 }: MemberFormDialogProps) => {
   const mergedDefaults = useMemo(
-    () => ({ ...emptyMember, ...defaultValues }),
+    () => normalizeMemberValues(defaultValues),
     [defaultValues],
   );
   const [form, setForm] = useState<MemberFormValues>(mergedDefaults);

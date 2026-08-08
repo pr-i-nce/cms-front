@@ -1,3 +1,5 @@
+import { getApiBaseUrl } from "@/lib/apiBase";
+
 export type ApiError = { code: string; details: string };
 export type ApiMeta = {
   requestId?: string;
@@ -13,7 +15,7 @@ export type ApiResponse<T> = {
   meta: ApiMeta | null;
 };
 
-const baseUrl = "https://cms.penielchristianchurchkitui.com/";
+const baseUrl = getApiBaseUrl();
 
 const buildUrl = (path: string, params?: Record<string, string | number | undefined>) => {
   const url = new URL(path, baseUrl);

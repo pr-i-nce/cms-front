@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useRef } from "react";
 import { me } from "@/api/auth";
+import { getApiBaseUrl } from "@/lib/apiBase";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { clearAuth, setAuth, setSessionExpired } from "@/store/authSlice";
+import { clearAuth, setAuth, setReady, setSessionExpired } from "@/store/authSlice";
 
 type Member = {
   id: string;
@@ -28,7 +29,20 @@ const LOCAL_USER_KEY = "userId";
 const LOCAL_PERM_KEY = "permissions";
 const LOCAL_EXPIRES_KEY = "sessionExpiresAt";
 const LOCAL_CSRF_KEY = "csrfToken";
-const API_BASE_URL = "https://cms.penielchristianchurchkitui.com/";
+const API_BASE_URL = getApiBaseUrl();
+const SESSION_CHECK_TIMEOUT_MS = 5000;
+
+const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number) => {
+  let timeoutId: number | null = null;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error("Session check timed out")), timeoutMs);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId) window.clearTimeout(timeoutId);
+  }
+};
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const expiryTimerRef = useRef<number | null>(null);
@@ -77,16 +91,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const refresh = async () => {
     const storedExpiry = localStorage.getItem(LOCAL_EXPIRES_KEY);
+    const storedUser = localStorage.getItem(LOCAL_USER_KEY);
+    if (!storedExpiry && !storedUser) {
+      dispatch(setReady(true));
+      return;
+    }
     if (storedExpiry) {
       const expired = Date.now() >= new Date(storedExpiry).getTime();
       if (expired) {
         try {
-          const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+          const response = await withTimeout(fetch(`${API_BASE_URL}/api/auth/refresh`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
             body: JSON.stringify({}),
-          });
+          }), SESSION_CHECK_TIMEOUT_MS);
           const payload = await response.json();
           if (response.ok && payload?.success) {
             const { expiresAt, csrfToken } = payload.data || {};
@@ -108,7 +127,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     }
     try {
-      const response = await me();
+      const response = await withTimeout(me(), SESSION_CHECK_TIMEOUT_MS);
       const expiresAt = localStorage.getItem(LOCAL_EXPIRES_KEY) || "";
       if (!expiresAt) {
         dispatch(setSessionExpired(true));

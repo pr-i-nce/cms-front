@@ -119,11 +119,17 @@ const Membership = () => {
   const [departmentRoles, setDepartmentRoles] = useState<string[]>([]);
   const [memberLookupOptions, setMemberLookupOptions] = useState<{ value: string; label: string; keywords?: string[] }[]>([]);
 
+  const memberJoinDates = useMemo(
+    () => allMembers.map((m) => (typeof m.dateJoined === "string" ? m.dateJoined : "")).filter(Boolean),
+    [allMembers],
+  );
   const activeMembers = canSeeMembers ? allMembers.filter((m) => m.status === "Active").length : 0;
   const latestJoinMonth = canSeeMembers
-    ? allMembers.reduce((max, m) => (m.dateJoined > max ? m.dateJoined : max), "0000-00-00").slice(0, 7)
+    ? memberJoinDates.reduce((max, dateJoined) => (dateJoined > max ? dateJoined : max), "0000-00-00").slice(0, 7)
     : "0000-00-00";
-  const newMembersThisMonth = canSeeMembers ? allMembers.filter((m) => m.dateJoined.startsWith(latestJoinMonth)).length : 0;
+  const newMembersThisMonth = canSeeMembers
+    ? memberJoinDates.filter((dateJoined) => dateJoined.startsWith(latestJoinMonth)).length
+    : 0;
 
   const departmentById = useMemo(() => Object.fromEntries(departments.map((d) => [d.id, d])), [departments]);
   const committeeById = useMemo(() => Object.fromEntries(committees.map((c) => [c.id, c])), [committees]);
@@ -202,6 +208,26 @@ const Membership = () => {
     const res = await listDepartments({ page: 1, pageSize: 200 });
     setDepartments(res.data);
     return res.data;
+  };
+
+  const reloadDepartmentMembers = async () => {
+    if (!canSeeDepartments) return;
+    const currentDepartments = departments.length ? departments : await reloadDepartments();
+    const deptMembers = await Promise.all(
+      currentDepartments.map((dept) => listDepartmentMembers(dept.id, { page: 1, pageSize: 500 })),
+    );
+    setDepartmentMembers(
+      deptMembers.flatMap((res, index) =>
+        res.data.map((entry) => ({
+          departmentId: currentDepartments[index].id,
+          memberId: entry.memberId,
+          role: entry.role,
+          memberName: entry.member?.name,
+          memberEmail: entry.member?.email,
+          memberPhone: entry.member?.phone,
+        })),
+      ),
+    );
   };
 
   const reloadCommittees = async () => {
@@ -346,6 +372,7 @@ const Membership = () => {
       status: values.status,
     });
     await reloadMembers();
+    await reloadDepartmentMembers();
     toast.success("Member created successfully");
     setIsAddOpen(false);
   };
@@ -380,6 +407,7 @@ const Membership = () => {
         status: values.status,
       });
       await reloadMembers();
+      await reloadDepartmentMembers();
     }
     toast.success("Member updated successfully");
     setEditingMemberId(null);
@@ -1044,13 +1072,13 @@ const Membership = () => {
         departments={departments.map((d) => d.name)}
         roles={departmentRoles}
         defaultValues={editingMember ? {
-          name: editingMember.name,
-          email: editingMember.email,
-          phone: editingMember.phone,
-          gender: editingMember.gender,
-          department: editingMember.department,
-          role: editingMember.role,
-          status: editingMember.status,
+          name: editingMember.name ?? "",
+          email: editingMember.email ?? "",
+          phone: editingMember.phone ?? "",
+          gender: editingMember.gender ?? "Male",
+          department: editingMember.department ?? "",
+          role: editingMember.role ?? "",
+          status: editingMember.status ?? "Active",
         } : undefined}
         onSubmit={handleEditMember}
       />

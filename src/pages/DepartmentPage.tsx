@@ -399,13 +399,13 @@ const DepartmentPage = () => {
         departments={allDepartments.map((d) => d.name)}
         roles={departmentRoles}
         defaultValues={editingMember ? {
-          name: editingMember.name,
-          email: editingMember.email,
-          phone: editingMember.phone,
-          gender: editingMember.gender,
-          department: editingMember.department,
-          role: editingMember.role,
-          status: editingMember.status,
+          name: editingMember.name ?? "",
+          email: editingMember.email ?? "",
+          phone: editingMember.phone ?? "",
+          gender: editingMember.gender ?? "Male",
+          department: editingMember.department ?? "",
+          role: editingMember.role ?? "",
+          status: editingMember.status ?? "Active",
         } : undefined}
         onSubmit={async (values) => {
           const ok = await confirm({
@@ -420,8 +420,11 @@ const DepartmentPage = () => {
               email: values.email,
               phone: values.phone,
               gender: values.gender,
+              department: values.department,
+              role: values.role,
               status: values.status,
             });
+            await loadDepartmentMembers();
           }
           toast.success("Member updated successfully");
           setEditingMemberId(null);
