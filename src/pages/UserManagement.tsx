@@ -7,20 +7,21 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Pencil, UserMinus, KeyRound, Plus, Users, Shield, Eye } from "lucide-react";
+import { Pencil, UserMinus, Plus, Users, Shield, Eye } from "lucide-react";
 import SearchBar from "@/components/shared/SearchBar";
 import PaginationControls from "@/components/shared/PaginationControls";
 import StatusBadge from "@/components/shared/StatusBadge";
 import UserFormDialog from "@/components/shared/UserFormDialog";
 import { useConfirm } from "@/components/shared/ConfirmProvider";
 import { toast } from "sonner";
-import { listUsers, createUser, updateUser, deactivateUser, resetUserPassword, getUserGroups, assignUserGroups } from "@/api/users";
+import { listUsers, createUser, updateUser, deactivateUser, getUserGroups, assignUserGroups } from "@/api/users";
 import { listGroups, createGroup, updateGroup, getGroupRoles, assignGroupRoles } from "@/api/groups";
 import { listRoles, getRolePermissions } from "@/api/roles";
 import { listPermissions } from "@/api/permissions";
 import { listDepartmentHeads } from "@/api/departments";
 import { listCommitteeChairs } from "@/api/committees";
 import { usePermissions } from "@/lib/permissions";
+import { formatDateValue } from "@/lib/format";
 
 type AuditFields = {
   createdBy: string;
@@ -45,6 +46,7 @@ type Permission = { id: string; name: string; description: string; audit?: Audit
 type GroupRole = { groupId: string; roleId: string };
 type UserGroup = { userId: string; groupId: string };
 type RolePermission = { roleId: string; permissionId: string };
+type MemberHead = { memberId: string; memberName: string };
 
 const PAGE_SIZE = 8;
 
@@ -155,14 +157,14 @@ const UserManagement = () => {
         setPermissions(permsRes.data);
 
         const [deptHeadsRes, committeeChairsRes] = await Promise.all([
-          has("DEPARTMENT_UPDATE") ? listDepartmentHeads() : Promise.resolve({ data: [] as any[] }),
-          has("COMMITTEE_UPDATE") ? listCommitteeChairs() : Promise.resolve({ data: [] as any[] }),
+          has("DEPARTMENT_UPDATE") ? listDepartmentHeads() : Promise.resolve({ data: [] as MemberHead[] }),
+          has("COMMITTEE_UPDATE") ? listCommitteeChairs() : Promise.resolve({ data: [] as MemberHead[] }),
         ]);
         const leaderMap = new Map<string, { id: string; name: string; email?: string; phone?: string }>();
-        deptHeadsRes.data.forEach((head: any) => {
+        deptHeadsRes.data.forEach((head) => {
           leaderMap.set(head.memberId, { id: head.memberId, name: head.memberName });
         });
-        committeeChairsRes.data.forEach((chair: any) => {
+        committeeChairsRes.data.forEach((chair) => {
           if (!leaderMap.has(chair.memberId)) {
             leaderMap.set(chair.memberId, { id: chair.memberId, name: chair.memberName });
           }
@@ -287,17 +289,6 @@ const UserManagement = () => {
     setEditingUserId(null);
   };
 
-  const handleResetPassword = async (userId: string, userName: string) => {
-    const ok = await confirm({
-      title: "Send password reset",
-      description: `Send a password reset email to ${userName}?`,
-      confirmText: "Send",
-    });
-    if (!ok) return;
-    await resetUserPassword(userId);
-    toast.info("Password reset sent");
-  };
-
   const handleDeactivate = async (userId: string, userName: string) => {
     const ok = await confirm({
       title: "Deactivate user",
@@ -370,6 +361,11 @@ const UserManagement = () => {
         <div>
           <h1 className="text-2xl font-bold">User Management</h1>
           <p className="text-muted-foreground">Users → Groups → Roles → Permissions</p>
+          {has("USER_RESET_PASSWORD") && (
+            <p className="mt-1 text-sm text-muted-foreground" role="status">
+              Admin password reset delivery is not configured. Users can change their own password from Profile.
+            </p>
+          )}
         </div>
       </div>
 
@@ -463,11 +459,6 @@ const UserManagement = () => {
                           {has("USER_ASSIGN_GROUPS") && (
                             <Button variant="ghost" size="icon" onClick={() => setAssignUserGroupsId(u.id)}>
                               <Users className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {has("USER_RESET_PASSWORD") && (
-                            <Button variant="ghost" size="icon" onClick={() => handleResetPassword(u.id, u.name)}>
-                              <KeyRound className="h-4 w-4" />
                             </Button>
                           )}
                           {has("USER_DEACTIVATE") && (
@@ -853,7 +844,7 @@ const UserManagement = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Created at</span>
-                    <span>{viewingUser.audit.createdAt}</span>
+                    <span>{formatDateValue(viewingUser.audit.createdAt)}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Last edited by</span>
@@ -861,7 +852,7 @@ const UserManagement = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Last edited at</span>
-                    <span>{viewingUser.audit.lastEditedAt}</span>
+                    <span>{formatDateValue(viewingUser.audit.lastEditedAt)}</span>
                   </div>
                 </div>
               </div>
@@ -929,7 +920,7 @@ const UserManagement = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Created at</span>
-                    <span>{viewingGroup.audit.createdAt}</span>
+                    <span>{formatDateValue(viewingGroup.audit.createdAt)}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Last edited by</span>
@@ -937,7 +928,7 @@ const UserManagement = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Last edited at</span>
-                    <span>{viewingGroup.audit.lastEditedAt}</span>
+                    <span>{formatDateValue(viewingGroup.audit.lastEditedAt)}</span>
                   </div>
                 </div>
               </div>

@@ -362,19 +362,22 @@ const Membership = () => {
       confirmText: "Create",
     });
     if (!ok) return;
-    await createMember({
-      name: values.name,
-      email: values.email,
-      phone: values.phone,
-      gender: values.gender,
-      department: values.department,
-      role: values.role,
-      status: values.status,
-    });
-    await reloadMembers();
-    await reloadDepartmentMembers();
-    toast.success("Member created successfully");
-    setIsAddOpen(false);
+    try {
+      await createMember({
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        gender: values.gender,
+        department: values.department,
+        role: values.role,
+        status: values.status,
+      });
+      await Promise.all([reloadMembers(), reloadDepartmentMembers()]);
+      toast.success("Member created successfully");
+      setIsAddOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create member");
+    }
   };
 
   const handleEditMember = async (values: {
@@ -396,21 +399,24 @@ const Membership = () => {
       confirmText: "Save",
     });
     if (!ok) return;
-    if (editingMemberId) {
-      await updateMember(editingMemberId, {
-        name: values.name,
-        email: values.email,
-        phone: values.phone,
-        gender: values.gender,
-        department: values.department,
-        role: values.role,
-        status: values.status,
-      });
-      await reloadMembers();
-      await reloadDepartmentMembers();
+    try {
+      if (editingMemberId) {
+        await updateMember(editingMemberId, {
+          name: values.name,
+          email: values.email,
+          phone: values.phone,
+          gender: values.gender,
+          department: values.department,
+          role: values.role,
+          status: values.status,
+        });
+        await Promise.all([reloadMembers(), reloadDepartmentMembers()]);
+      }
+      toast.success("Member updated successfully");
+      setEditingMemberId(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update member");
     }
-    toast.success("Member updated successfully");
-    setEditingMemberId(null);
   };
 
   const handleDeactivate = async (memberId: string, memberName: string) => {
@@ -421,9 +427,13 @@ const Membership = () => {
       destructive: true,
     });
     if (!ok) return;
-    await deleteMember(memberId);
-    await reloadMembers();
-    toast.info("Member deactivated");
+    try {
+      await deleteMember(memberId);
+      await Promise.all([reloadMembers(), reloadDepartmentMembers()]);
+      toast.info("Member deactivated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to deactivate member");
+    }
   };
 
   const handleDeactivateDepartment = async (deptId: string) => {

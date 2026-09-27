@@ -414,20 +414,24 @@ const DepartmentPage = () => {
             confirmText: "Save",
           });
           if (!ok) return;
-          if (editingMember) {
-            await updateMember(editingMember.id, {
-              name: values.name,
-              email: values.email,
-              phone: values.phone,
-              gender: values.gender,
-              department: values.department,
-              role: values.role,
-              status: values.status,
-            });
-            await loadDepartmentMembers();
+          try {
+            if (editingMember) {
+              await updateMember(editingMember.id, {
+                name: values.name,
+                email: values.email,
+                phone: values.phone,
+                gender: values.gender,
+                department: values.department,
+                role: values.role,
+                status: values.status,
+              });
+              await loadDepartmentMembers();
+            }
+            toast.success("Member updated successfully");
+            setEditingMemberId(null);
+          } catch (err) {
+            toast.error(err instanceof Error ? err.message : "Failed to update member");
           }
-          toast.success("Member updated successfully");
-          setEditingMemberId(null);
         }}
       />
       <Dialog open={isAddToDeptOpen} onOpenChange={setIsAddToDeptOpen}>

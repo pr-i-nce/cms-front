@@ -40,17 +40,23 @@ type PastorAssignment = {
   };
 };
 
+type MemberChoice = { id: string; name: string; email?: string | null; phone?: string | null };
+type BranchDetails = {
+  branch: Branch;
+  pastors: { memberId: string; role?: string; member: PastorAssignment["member"] }[];
+};
+
 const Branches = () => {
   const { has } = usePermissions();
   const confirm = useConfirm();
   const canAccessBranches = has("BRANCH_UPDATE") || has("BRANCH_CREATE") || has("BRANCH_DEACTIVATE");
   const [branches, setBranches] = useState<Branch[]>([]);
   const [pastors, setPastors] = useState<PastorAssignment[]>([]);
-  const [members, setMembers] = useState<any[]>([]);
+  const [members, setMembers] = useState<MemberChoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [viewBranchId, setViewBranchId] = useState<string | null>(null);
-  const [viewBranch, setViewBranch] = useState<any | null>(null);
+  const [viewBranch, setViewBranch] = useState<BranchDetails | null>(null);
   const [quickSmsOpen, setQuickSmsOpen] = useState(false);
   const [quickSmsConfig, setQuickSmsConfig] = useState<{ recipientType: "individual" | "selected"; recipientId?: string; recipientIds?: string[]; recipientLabel?: string } | null>(null);
   const [branchFormOpen, setBranchFormOpen] = useState(false);
@@ -86,14 +92,6 @@ const Branches = () => {
     };
     load();
   }, [canAccessBranches]);
-
-  if (!canAccessBranches) {
-    return (
-      <div className="p-8 text-center text-muted-foreground">
-        You do not have access to branches.
-      </div>
-    );
-  }
 
   useEffect(() => {
     if (!viewBranchId) return;
@@ -138,29 +136,33 @@ const Branches = () => {
       toast.error("Branch name is required");
       return;
     }
-    if (branchFormMode === "create") {
-      await createBranch({
-        name: branchForm.name.trim(),
-        location: branchForm.location || undefined,
-        address: branchForm.address || undefined,
-        phone: branchForm.phone || undefined,
-        email: branchForm.email || undefined,
-      });
-      toast.success("Branch created");
-    } else {
-      await updateBranch(branchForm.id, {
-        name: branchForm.name.trim(),
-        location: branchForm.location || undefined,
-        address: branchForm.address || undefined,
-        phone: branchForm.phone || undefined,
-        email: branchForm.email || undefined,
-        status: branchForm.status || "Active",
-      });
-      toast.success("Branch updated");
+    try {
+      if (branchFormMode === "create") {
+        await createBranch({
+          name: branchForm.name.trim(),
+          location: branchForm.location || undefined,
+          address: branchForm.address || undefined,
+          phone: branchForm.phone || undefined,
+          email: branchForm.email || undefined,
+        });
+        toast.success("Branch created");
+      } else {
+        await updateBranch(branchForm.id, {
+          name: branchForm.name.trim(),
+          location: branchForm.location || undefined,
+          address: branchForm.address || undefined,
+          phone: branchForm.phone || undefined,
+          email: branchForm.email || undefined,
+          status: branchForm.status || "Active",
+        });
+        toast.success("Branch updated");
+      }
+      const branchesRes = await listBranches({ page: 1, pageSize: 200 });
+      setBranches(branchesRes.data);
+      setBranchFormOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save branch");
     }
-    const branchesRes = await listBranches({ page: 1, pageSize: 200 });
-    setBranches(branchesRes.data);
-    setBranchFormOpen(false);
   };
 
   const handleDeactivateBranch = async (branch: Branch) => {
@@ -171,10 +173,14 @@ const Branches = () => {
       destructive: true,
     });
     if (!ok) return;
-    await deactivateBranch(branch.id);
-    const branchesRes = await listBranches({ page: 1, pageSize: 200 });
-    setBranches(branchesRes.data);
-    toast.info("Branch deactivated");
+    try {
+      await deactivateBranch(branch.id);
+      const branchesRes = await listBranches({ page: 1, pageSize: 200 });
+      setBranches(branchesRes.data);
+      toast.info("Branch deactivated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to deactivate branch");
+    }
   };
 
   const openAssignPastor = (branchId?: string, memberId?: string, role?: string) => {
@@ -188,16 +194,22 @@ const Branches = () => {
       toast.error("Select branch and pastor");
       return;
     }
-    await addBranchPastor(pastorForm.branchId, {
-      memberId: pastorForm.memberId,
-      role: pastorForm.role || undefined,
-    });
-    const pastorsRes = await listBranchPastorAssignments();
-    setPastors(pastorsRes.data ?? []);
-    const branchRes = await listBranches({ page: 1, pageSize: 200 });
-    setBranches(branchRes.data);
-    setPastorFormOpen(false);
-    toast.success(pastorFormMode === "create" ? "Pastor assigned" : "Assignment updated");
+    try {
+      await addBranchPastor(pastorForm.branchId, {
+        memberId: pastorForm.memberId,
+        role: pastorForm.role || undefined,
+      });
+      const [pastorsRes, branchRes] = await Promise.all([
+        listBranchPastorAssignments(),
+        listBranches({ page: 1, pageSize: 200 }),
+      ]);
+      setPastors(pastorsRes.data ?? []);
+      setBranches(branchRes.data);
+      setPastorFormOpen(false);
+      toast.success(pastorFormMode === "create" ? "Pastor assigned" : "Assignment updated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save pastor assignment");
+    }
   };
 
   const handleRemovePastor = async (branchId: string, memberId: string, memberName?: string) => {
@@ -208,12 +220,18 @@ const Branches = () => {
       destructive: true,
     });
     if (!ok) return;
-    await removeBranchPastor(branchId, memberId);
-    const pastorsRes = await listBranchPastorAssignments();
-    setPastors(pastorsRes.data ?? []);
-    const branchRes = await listBranches({ page: 1, pageSize: 200 });
-    setBranches(branchRes.data);
-    toast.info("Pastor removed");
+    try {
+      await removeBranchPastor(branchId, memberId);
+      const [pastorsRes, branchRes] = await Promise.all([
+        listBranchPastorAssignments(),
+        listBranches({ page: 1, pageSize: 200 }),
+      ]);
+      setPastors(pastorsRes.data ?? []);
+      setBranches(branchRes.data);
+      toast.info("Pastor removed");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to remove pastor");
+    }
   };
 
   const allPastorIds = Array.from(new Set(pastors.map((entry) => entry.member.id)));
@@ -228,6 +246,14 @@ const Branches = () => {
       })),
     [members],
   );
+
+  if (!canAccessBranches) {
+    return (
+      <div className="p-8 text-center text-muted-foreground">
+        You do not have access to branches.
+      </div>
+    );
+  }
 
   if (loading) return <div className="p-8 text-center text-muted-foreground">Loading branches...</div>;
   if (loadError) return <div className="p-8 text-center text-destructive">Failed to load data: {loadError}</div>;
@@ -445,7 +471,7 @@ const Branches = () => {
                 <p className="text-sm font-medium">Pastors</p>
                 {viewBranch.pastors?.length ? (
                   <div className="space-y-2">
-                    {viewBranch.pastors.map((entry: any) => (
+                    {viewBranch.pastors.map((entry) => (
                       <div key={entry.memberId} className="flex items-center justify-between rounded-lg border px-3 py-2 text-sm">
                         <div>
                           <p className="font-medium">{entry.member?.name}</p>
@@ -476,7 +502,7 @@ const Branches = () => {
               <Button
                 variant="outline"
                 onClick={() => {
-                  const ids = Array.from(new Set(viewBranch.pastors.map((p: any) => p.memberId)));
+                  const ids = Array.from(new Set(viewBranch.pastors.map((p) => p.memberId)));
                   openQuickSms({ recipientType: "selected", recipientIds: ids, recipientLabel: `All pastors in ${viewBranch.branch?.name || "branch"}` });
                 }}
               >

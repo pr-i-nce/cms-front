@@ -11,6 +11,7 @@ import { useConfirm } from "@/components/shared/ConfirmProvider";
 import { getUser, updateUser } from "@/api/users";
 import { useAuth } from "@/lib/auth";
 import { usePermissions } from "@/lib/permissions";
+import { formatDateValue } from "@/lib/format";
 
 type AuditFields = {
   createdBy: string;
@@ -353,7 +354,7 @@ const Profile = () => {
               </div>
               <div className="flex items-center justify-between">
                 <span>Created at</span>
-                <span>{profile?.audit?.createdAt ?? "—"}</span>
+                <span>{formatDateValue(profile?.audit?.createdAt)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Last edited by</span>
@@ -361,7 +362,7 @@ const Profile = () => {
               </div>
               <div className="flex items-center justify-between">
                 <span>Last edited at</span>
-                <span>{profile?.audit?.lastEditedAt ?? "—"}</span>
+                <span>{formatDateValue(profile?.audit?.lastEditedAt)}</span>
               </div>
             </div>
           </div>

@@ -29,6 +29,7 @@ const SmsQuickSendDialog = ({
 }: SmsQuickSendDialogProps) => {
   const confirm = useConfirm();
   const [message, setMessage] = useState("");
+  const [greeting, setGreeting] = useState("");
   const [personalize, setPersonalize] = useState(true);
   const [sendMode, setSendMode] = useState("auto");
   const [scheduledAt, setScheduledAt] = useState("");
@@ -61,6 +62,7 @@ const SmsQuickSendDialog = ({
       recipientType,
       recipientId: recipientType === "individual" || recipientType === "department" || recipientType === "committee" ? recipientId : undefined,
       recipientIds: recipientType === "selected" ? normalizedRecipientIds : undefined,
+      greeting: greeting.trim() || undefined,
       message,
       personalize,
       sendMode,
@@ -68,6 +70,7 @@ const SmsQuickSendDialog = ({
     });
     toast.success("SMS sent successfully!");
     setMessage("");
+    setGreeting("");
     setScheduledAt("");
     onOpenChange(false);
   };
@@ -111,6 +114,19 @@ const SmsQuickSendDialog = ({
               onChange={(e) => setMessage(e.target.value)}
             />
           </div>
+          {personalize && (
+            <div className="space-y-2">
+              <Label>Greeting prefix</Label>
+              <Input
+                placeholder="Hi {name}"
+                value={greeting}
+                onChange={(e) => setGreeting(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Use {`{name}`} to insert the recipient’s first name, or leave blank for the default greeting.
+              </p>
+            </div>
+          )}
           <div className="flex items-center justify-between rounded-lg border px-3 py-2 text-sm">
             <div>
               <p className="font-medium">Personalize with name</p>

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Pencil, MessageSquare, UserMinus, User, Mail, Phone, Calendar, Building2, Shield } from "lucide-react";
+import { ArrowLeft, Pencil, MessageSquare, UserMinus, User, Mail, Phone, Calendar, Building2, Shield, type LucideIcon } from "lucide-react";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { toast } from "sonner";
 import MemberFormDialog from "@/components/shared/MemberFormDialog";
@@ -12,6 +12,7 @@ import { listDepartments, listDepartmentRoles } from "@/api/departments";
 import { listCommittees } from "@/api/committees";
 import { listSms } from "@/api/sms";
 import { usePermissions } from "@/lib/permissions";
+import { formatDateValue } from "@/lib/format";
 import SmsQuickSendDialog from "@/components/shared/SmsQuickSendDialog";
 
 type AuditFields = {
@@ -90,7 +91,7 @@ const MemberProfile = () => {
       }
     };
     load();
-  }, [id]);
+  }, [id, has]);
 
   const memberDeptNames = useMemo(() => {
     const entries = memberDeptAssignments
@@ -100,14 +101,8 @@ const MemberProfile = () => {
         return { name, role: entry.role || "Member" };
       })
       .filter(Boolean) as { name: string; role: string }[];
-    if (member?.department) {
-      const exists = entries.some((item) => item.name === member.department);
-      if (!exists) {
-        entries.push({ name: member.department, role: member.role || "Member" });
-      }
-    }
     return entries;
-  }, [memberDeptAssignments, departments, member]);
+  }, [memberDeptAssignments, departments]);
 
   const memberCommitteeNames = useMemo(() => {
     return memberCommitteeAssignments
@@ -124,7 +119,7 @@ const MemberProfile = () => {
     return smsRecords.filter((s) => s.recipients?.includes(member.name.split(" ")[0] || "")).slice(0, 5);
   }, [member, smsRecords]);
 
-  const InfoRow = ({ icon: Icon, label, value }: { icon: any; label: string; value: string }) => (
+  const InfoRow = ({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) => (
     <div className="flex items-center gap-3 py-3 border-b last:border-0">
       <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
       <span className="text-sm text-muted-foreground w-28">{label}</span>
@@ -195,7 +190,7 @@ const MemberProfile = () => {
             <InfoRow icon={Phone} label="Phone" value={member.phone} />
             <InfoRow icon={Mail} label="Email" value={member.email} />
             <InfoRow icon={User} label="Gender" value={member.gender} />
-            <InfoRow icon={Calendar} label="Date Joined" value={member.dateJoined} />
+            <InfoRow icon={Calendar} label="Date Joined" value={formatDateValue(member.dateJoined)} />
           </div>
 
           <div className="bg-card rounded-lg border p-6">
@@ -253,7 +248,7 @@ const MemberProfile = () => {
               </div>
               <div className="flex items-center justify-between">
                 <span>Created at</span>
-                <span>{member.audit?.createdAt ?? "—"}</span>
+                <span>{formatDateValue(member.audit?.createdAt)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Last edited by</span>
@@ -261,7 +256,7 @@ const MemberProfile = () => {
               </div>
               <div className="flex items-center justify-between">
                 <span>Last edited at</span>
-                <span>{member.audit?.lastEditedAt ?? "—"}</span>
+                <span>{formatDateValue(member.audit?.lastEditedAt)}</span>
               </div>
             </div>
           </div>

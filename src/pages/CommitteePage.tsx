@@ -161,14 +161,6 @@ const CommitteePage = () => {
     load();
   }, [id, canAccessCommittees, has]);
 
-  if (!canAccessCommittees) {
-    return (
-      <div className="p-8 text-center text-muted-foreground">
-        You do not have access to committee details.
-      </div>
-    );
-  }
-
   const handleMemberLookup = async (query: string) => {
     if (!query || query.length < 2) {
       setAllMembers([]);
@@ -217,6 +209,14 @@ const CommitteePage = () => {
     setPage(1);
   }, [committee?.id]);
 
+  if (!canAccessCommittees) {
+    return (
+      <div className="p-8 text-center text-muted-foreground">
+        You do not have access to committee details.
+      </div>
+    );
+  }
+
   if (loading) return <div className="p-8 text-center text-muted-foreground">Loading committee...</div>;
   if (loadError) return <div className="p-8 text-center text-destructive">Failed to load data: {loadError}</div>;
   if (!committee) return <div className="p-8 text-center text-muted-foreground">Committee not found</div>;
@@ -230,11 +230,15 @@ const CommitteePage = () => {
       confirmText: "Add",
     });
     if (!ok) return;
-    await addCommitteeMember(committee.id, { memberId: selectedMemberId, role: selectedRole });
-    await loadCommitteeMembers();
-    setSelectedMemberId("");
-    setSelectedRole("Member");
-    toast.success("Member added to committee");
+    try {
+      await addCommitteeMember(committee.id, { memberId: selectedMemberId, role: selectedRole });
+      await loadCommitteeMembers();
+      setSelectedMemberId("");
+      setSelectedRole("Member");
+      toast.success("Member added to committee");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to add committee member");
+    }
   };
 
   const removeMemberFromCommittee = async (memberId: string, memberName?: string) => {
@@ -245,9 +249,13 @@ const CommitteePage = () => {
       destructive: true,
     });
     if (!ok) return;
-    await removeCommitteeMember(committee.id, memberId);
-    await loadCommitteeMembers();
-    toast.info("Member removed from committee");
+    try {
+      await removeCommitteeMember(committee.id, memberId);
+      await loadCommitteeMembers();
+      toast.info("Member removed from committee");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to remove committee member");
+    }
   };
 
   const openQuickSms = (config: { recipientType: "individual" | "committee"; recipientId?: string; recipientLabel?: string }) => {
