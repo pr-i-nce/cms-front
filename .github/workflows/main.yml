@@ -1,4 +1,4 @@
-name: Deploy Frontend to cPanel
+name: Build Frontend
 
 on:
   push:
@@ -19,20 +19,17 @@ jobs:
           node-version: '22'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build project
-        run: npm run build 
+        run: npm run build
         env:
           VITE_API_URL: https://cms.penielchristianchurchkitui.com
 
-      - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: ${{ secrets.FTP_PORT || 21 }}
-          local-dir: ./dist/ 
-          server-dir: ./ 
-          delete-removed: false
+          name: cms-frontend-build
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
