@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePermissions } from "@/lib/permissions";
+import { useAuth } from "@/lib/useAuth";
 
 const navItems = [
   { label: "Dashboard", path: "/", icon: LayoutDashboard },
@@ -25,6 +26,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { has } = usePermissions();
+  const { clearAuth } = useAuth();
   const canSeeBranches = has("BRANCH_UPDATE") || has("BRANCH_CREATE") || has("BRANCH_DEACTIVATE");
   const canSeeUsers = has("USER_CREATE") || has("USER_UPDATE") || has("USER_DEACTIVATE");
 
@@ -63,6 +65,8 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
           <button
             key={item.path}
             onClick={() => navigate(item.path)}
+            aria-current={isActive(item.path) ? "page" : undefined}
+            title={collapsed ? item.label : undefined}
             className={cn(
               "w-full flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition-all duration-200",
               isActive(item.path)
@@ -79,7 +83,10 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
       {/* Bottom */}
       <div className="space-y-1 border-t border-sidebar-border px-3 pb-4 pt-3">
         <button
-          onClick={() => navigate("/login")}
+          onClick={() => {
+            clearAuth();
+            navigate("/login", { replace: true });
+          }}
           className="w-full flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-sidebar-foreground/75 transition-colors hover:bg-destructive/15 hover:text-red-200"
         >
           <LogOut className="h-5 w-5 shrink-0" />

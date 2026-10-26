@@ -1,0 +1,1 @@
+const n=t=>{if(!t)return"—";const e=new Date(t);return Number.isNaN(e.getTime())?t:/^\d{4}-\d{2}-\d{2}$/.test(t)?new Intl.DateTimeFormat("en-KE",{dateStyle:"medium"}).format(e):new Intl.DateTimeFormat("en-KE",{dateStyle:"medium",timeStyle:"short"}).format(e)};export{n as f};

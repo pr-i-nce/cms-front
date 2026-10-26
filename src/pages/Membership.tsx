@@ -21,6 +21,7 @@ import { listDepartments, listDepartmentMembers, deactivateDepartment, createDep
 import { listCommittees, listCommitteeMembers, deactivateCommittee, createCommittee, listCommitteeChairs } from "@/api/committees";
 import { usePermissions } from "@/lib/permissions";
 import SmsQuickSendDialog from "@/components/shared/SmsQuickSendDialog";
+import { ScreenError, ScreenLoading } from "@/components/shared/ScreenStates";
 
 type AuditFields = {
   createdBy: string;
@@ -403,7 +404,7 @@ const Membership = () => {
       if (editingMemberId) {
         await updateMember(editingMemberId, {
           name: values.name,
-          email: values.email,
+          email: values.email.trim() || null,
           phone: values.phone,
           gender: values.gender,
           department: values.department,
@@ -552,12 +553,17 @@ const Membership = () => {
   );
 
   if (loading) {
-    return <div className="p-8 text-center text-muted-foreground">Loading membership data...</div>;
+    return <ScreenLoading label="Loading membership" />;
   }
 
   if (loadError) {
-    return <div className="p-8 text-center text-destructive">Failed to load data: {loadError}</div>;
+    return <ScreenError message={`Membership data could not be loaded: ${loadError}`} />;
   }
+
+  const openQuickSms = (config: { recipientType: "individual" | "selected" | "department" | "committee" | "all"; recipientId?: string; recipientIds?: string[]; recipientLabel?: string }) => {
+    setQuickSmsConfig(config);
+    setQuickSmsOpen(true);
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -1221,7 +1227,3 @@ const Membership = () => {
 };
 
 export default Membership;
-  const openQuickSms = (config: { recipientType: "individual" | "selected" | "department" | "committee" | "all"; recipientId?: string; recipientIds?: string[]; recipientLabel?: string }) => {
-    setQuickSmsConfig(config);
-    setQuickSmsOpen(true);
-  };

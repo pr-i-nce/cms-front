@@ -1,36 +1,17 @@
-import { createContext, useContext, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { me } from "@/api/auth";
+import { ApiRequestFailure, clearApiCache } from "@/lib/api";
 import { getApiBaseUrl } from "@/lib/apiBase";
+import { AuthContext, type Member } from "@/lib/authContext";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { clearAuth, setAuth, setReady, setSessionExpired } from "@/store/authSlice";
-
-type Member = {
-  id: string;
-  name: string;
-  role?: string;
-  email: string;
-  status: string;
-};
-
-type AuthContextValue = {
-  user: Member | null;
-  permissions: string[];
-  ready: boolean;
-  setAuth: (user: Member, permissions: string[], session: { token: string; expiresAt: string; csrfToken?: string }) => void;
-  clearAuth: () => void;
-  refresh: () => Promise<void>;
-  sessionExpired: boolean;
-  acknowledgeSessionExpired: () => void;
-};
-
-const Context = createContext<AuthContextValue | null>(null);
+import { clearAuth, setAuth, setAuthUnavailable, setReady, setSessionExpired } from "@/store/authSlice";
 
 const LOCAL_USER_KEY = "userId";
 const LOCAL_PERM_KEY = "permissions";
 const LOCAL_EXPIRES_KEY = "sessionExpiresAt";
 const LOCAL_CSRF_KEY = "csrfToken";
 const API_BASE_URL = getApiBaseUrl();
-const SESSION_CHECK_TIMEOUT_MS = 5000;
+const SESSION_CHECK_TIMEOUT_MS = 32_000;
 
 const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number) => {
   let timeoutId: number | null = null;
@@ -50,9 +31,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const user = useAppSelector((state) => state.auth.user);
   const permissions = useAppSelector((state) => state.auth.permissions);
   const ready = useAppSelector((state) => state.auth.ready);
+  const authUnavailable = useAppSelector((state) => state.auth.authUnavailable);
   const sessionExpired = useAppSelector((state) => state.auth.sessionExpired);
+  const authSnapshotRef = useRef({ user, permissions });
 
-  const setAuthState = (nextUser: Member, nextPermissions: string[], session: { token: string; refreshToken?: string; expiresAt: string; csrfToken?: string }) => {
+  useEffect(() => {
+    authSnapshotRef.current = { user, permissions };
+  }, [user, permissions]);
+
+  const setAuthState = useCallback((nextUser: Member, nextPermissions: string[], session: { token: string; refreshToken?: string; expiresAt: string; csrfToken?: string }) => {
+    authSnapshotRef.current = { user: nextUser, permissions: nextPermissions };
+    const previousUserId = localStorage.getItem(LOCAL_USER_KEY);
+    if (previousUserId && previousUserId !== nextUser.id) clearApiCache();
     localStorage.removeItem("sessionToken");
     localStorage.removeItem("refreshToken");
     localStorage.setItem(LOCAL_USER_KEY, nextUser.id);
@@ -62,9 +52,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem(LOCAL_CSRF_KEY, session.csrfToken);
     }
     dispatch(setAuth({ user: nextUser, permissions: nextPermissions, token: session.token, expiresAt: session.expiresAt }));
-  };
+  }, [dispatch]);
 
-  const clearAuthState = () => {
+  const clearAuthState = useCallback(() => {
+    authSnapshotRef.current = { user: null, permissions: [] };
+    clearApiCache();
     localStorage.removeItem(LOCAL_USER_KEY);
     localStorage.removeItem(LOCAL_PERM_KEY);
     localStorage.removeItem("sessionToken");
@@ -72,9 +64,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem("refreshToken");
     localStorage.removeItem(LOCAL_CSRF_KEY);
     dispatch(clearAuth());
-  };
+  }, [dispatch]);
 
-  const scheduleExpiry = (expiresAt?: string | null) => {
+  const scheduleExpiry = useCallback((expiresAt?: string | null) => {
     if (expiryTimerRef.current) window.clearTimeout(expiryTimerRef.current);
     if (!expiresAt) return;
     const ms = new Date(expiresAt).getTime() - Date.now();
@@ -87,9 +79,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       dispatch(setSessionExpired(true));
       clearAuthState();
     }, ms);
-  };
+  }, [clearAuthState, dispatch]);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
+    if (!authSnapshotRef.current.user) {
+      dispatch(setReady(false));
+      dispatch(setAuthUnavailable(false));
+    }
     const storedExpiry = localStorage.getItem(LOCAL_EXPIRES_KEY);
     const storedUser = localStorage.getItem(LOCAL_USER_KEY);
     if (!storedExpiry && !storedUser) {
@@ -97,33 +93,48 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
     if (storedExpiry) {
-      const expired = Date.now() >= new Date(storedExpiry).getTime();
+      const expiryTime = new Date(storedExpiry).getTime();
+      const expired = !Number.isFinite(expiryTime) || Date.now() >= expiryTime;
       if (expired) {
         try {
-          const response = await withTimeout(fetch(`${API_BASE_URL}/api/auth/refresh`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({}),
-          }), SESSION_CHECK_TIMEOUT_MS);
-          const payload = await response.json();
+          const { response, payload } = await withTimeout(
+            fetch(`${API_BASE_URL}/api/auth/refresh`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({}),
+            }).then(async (result) => ({ response: result, payload: await result.json().catch(() => null) })),
+            SESSION_CHECK_TIMEOUT_MS,
+          );
           if (response.ok && payload?.success) {
             const { expiresAt, csrfToken } = payload.data || {};
             if (expiresAt) {
               localStorage.setItem(LOCAL_EXPIRES_KEY, expiresAt);
               if (csrfToken) localStorage.setItem(LOCAL_CSRF_KEY, csrfToken);
-              if (user) {
-                setAuthState(user, permissions, { token: "", expiresAt, csrfToken });
-              }
+            } else {
+              dispatch(setSessionExpired(true));
+              clearAuthState();
               return;
             }
+          } else if (response.status >= 500) {
+            dispatch(setAuthUnavailable(true));
+            dispatch(setReady(true));
+            return;
+          } else {
+            dispatch(setSessionExpired(true));
+            clearAuthState();
+            return;
           }
-        } catch {
-          // fall through to expire
+        } catch (error) {
+          if (error instanceof ApiRequestFailure || error instanceof TypeError || (error instanceof Error && error.message.includes("timed out"))) {
+            dispatch(setAuthUnavailable(true));
+            dispatch(setReady(true));
+            return;
+          }
+          dispatch(setSessionExpired(true));
+          clearAuthState();
+          return;
         }
-        dispatch(setSessionExpired(true));
-        clearAuthState();
-        return;
       }
     }
     try {
@@ -136,15 +147,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       const csrfToken = localStorage.getItem(LOCAL_CSRF_KEY) || undefined;
       setAuthState(response.data.user, response.data.permissions ?? [], { token: "", expiresAt, csrfToken });
-    } catch (err) {
+    } catch (error) {
+      if (
+        (error instanceof ApiRequestFailure && (error.status === null || error.status >= 500)) ||
+        error instanceof TypeError ||
+        (error instanceof Error && error.message.includes("timed out"))
+      ) {
+        // Keep the HttpOnly session cookie and ask the user to retry when the
+        // network or API recovers. Never trust local permissions to render data.
+        dispatch(setAuthUnavailable(true));
+        dispatch(setReady(true));
+        return;
+      }
       dispatch(setSessionExpired(true));
       clearAuthState();
     }
-  };
+  }, [clearAuthState, dispatch, setAuthState]);
 
   useEffect(() => {
-    refresh();
-  }, []);
+    void refresh();
+  }, [refresh]);
 
   useEffect(() => {
     const storedExpiry = localStorage.getItem(LOCAL_EXPIRES_KEY);
@@ -155,8 +177,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
     const refreshedHandler = (event: Event) => {
       const detail = (event as CustomEvent).detail as { expiresAt: string; csrfToken?: string } | undefined;
-      if (!detail || !user) return;
-      setAuthState(user, permissions, { token: "", expiresAt: detail.expiresAt, csrfToken: detail.csrfToken });
+      const current = authSnapshotRef.current;
+      if (!detail || !current.user) return;
+      setAuthState(current.user, current.permissions, { token: "", expiresAt: detail.expiresAt, csrfToken: detail.csrfToken });
     };
     window.addEventListener("session-expired", handler);
     window.addEventListener("session-refreshed", refreshedHandler);
@@ -165,33 +188,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       window.removeEventListener("session-expired", handler);
       window.removeEventListener("session-refreshed", refreshedHandler);
     };
-  }, []);
+  }, [clearAuthState, dispatch, scheduleExpiry, setAuthState]);
 
   useEffect(() => {
     const storedExpiry = localStorage.getItem(LOCAL_EXPIRES_KEY);
     scheduleExpiry(storedExpiry);
-  }, [user]);
+  }, [scheduleExpiry, user]);
 
-  const acknowledgeSessionExpired = () => dispatch(setSessionExpired(false));
+  const acknowledgeSessionExpired = useCallback(() => dispatch(setSessionExpired(false)), [dispatch]);
 
   const value = useMemo(
     () => ({
       user,
       permissions,
       ready,
+      authUnavailable,
       setAuth: setAuthState,
       clearAuth: clearAuthState,
       refresh,
       sessionExpired,
       acknowledgeSessionExpired,
     }),
-    [user, permissions, ready, sessionExpired],
+    [user, permissions, ready, authUnavailable, sessionExpired, setAuthState, clearAuthState, refresh, acknowledgeSessionExpired],
   );
-  return <Context.Provider value={value}>{children}</Context.Provider>;
-};
-
-export const useAuth = () => {
-  const ctx = useContext(Context);
-  if (!ctx) throw new Error("AuthProvider missing");
-  return ctx;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

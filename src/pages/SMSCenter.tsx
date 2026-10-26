@@ -21,6 +21,7 @@ import { listDepartments, listDepartmentAssignments } from "@/api/departments";
 import { listCommittees, listCommitteeMembers } from "@/api/committees";
 import { getSmsBalance, listSms, listSmsSegments, listSmsTemplates, sendSms } from "@/api/sms";
 import { usePermissions } from "@/lib/permissions";
+import { ScreenError, ScreenLoading } from "@/components/shared/ScreenStates";
 
 type AuditFields = {
   createdBy: string;
@@ -459,12 +460,12 @@ const SMSCenter = () => {
     const prefix = greeting.trim();
     if (prefix) {
       if (prefix.includes("{name}")) {
-        return `${prefix.replaceAll("{name}", firstName)} ${base}`.trim();
+        return `${prefix.replace(/\{name\}/g, firstName)} ${base}`.trim();
       }
       return `${prefix} ${firstName}, ${base}`.trim();
     }
     if (base.includes("{name}")) {
-      return base.replaceAll("{name}", firstName);
+      return base.replace(/\{name\}/g, firstName);
     }
     return `Hi ${firstName}, ${base}`;
   };
@@ -527,11 +528,11 @@ const SMSCenter = () => {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-muted-foreground">Loading SMS data...</div>;
+    return <ScreenLoading label="Loading SMS center" />;
   }
 
   if (loadError) {
-    return <div className="p-8 text-center text-destructive">Failed to load data: {loadError}</div>;
+    return <ScreenError message={`SMS center data could not be loaded: ${loadError}`} />;
   }
 
   return (

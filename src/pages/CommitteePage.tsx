@@ -18,6 +18,7 @@ import { listMembers, lookupMembers, updateMember } from "@/api/members";
 import { listDepartments, listDepartmentRoles } from "@/api/departments";
 import { getCommittee, listCommitteeMembers, addCommitteeMember, removeCommitteeMember, listCommitteeRoles } from "@/api/committees";
 import { usePermissions } from "@/lib/permissions";
+import { ScreenError, ScreenLoading } from "@/components/shared/ScreenStates";
 import SmsQuickSendDialog from "@/components/shared/SmsQuickSendDialog";
 
 type AuditFields = {
@@ -217,8 +218,8 @@ const CommitteePage = () => {
     );
   }
 
-  if (loading) return <div className="p-8 text-center text-muted-foreground">Loading committee...</div>;
-  if (loadError) return <div className="p-8 text-center text-destructive">Failed to load data: {loadError}</div>;
+  if (loading) return <ScreenLoading label="Loading committee" />;
+  if (loadError) return <ScreenError message={`Committee data could not be loaded: ${loadError}`} />;
   if (!committee) return <div className="p-8 text-center text-muted-foreground">Committee not found</div>;
 
   const addMemberToCommittee = async () => {

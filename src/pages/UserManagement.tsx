@@ -22,6 +22,7 @@ import { listDepartmentHeads } from "@/api/departments";
 import { listCommitteeChairs } from "@/api/committees";
 import { usePermissions } from "@/lib/permissions";
 import { formatDateValue } from "@/lib/format";
+import { ScreenError, ScreenLoading } from "@/components/shared/ScreenStates";
 
 type AuditFields = {
   createdBy: string;
@@ -348,11 +349,11 @@ const UserManagement = () => {
     values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
 
   if (loading) {
-    return <div className="p-8 text-center text-muted-foreground">Loading user management...</div>;
+    return <ScreenLoading label="Loading user management" />;
   }
 
   if (loadError) {
-    return <div className="p-8 text-center text-destructive">Failed to load data: {loadError}</div>;
+    return <ScreenError message={`User management could not be loaded: ${loadError}`} />;
   }
 
   return (

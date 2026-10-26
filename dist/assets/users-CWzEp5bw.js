@@ -1,0 +1,1 @@
+import{k as r,m as e,n as t}from"./index-B1dgmqSD.js";const i=s=>e("/api/users",s),o=s=>t("/api/users",s),u=s=>e(`/api/users/${s}`),c=(s,a)=>r(`/api/users/${s}`,a),n=s=>t(`/api/users/${s}/deactivate`),U=s=>e(`/api/users/${s}/groups`),g=(s,a)=>r(`/api/users/${s}/groups`,a);export{g as a,u as b,o as c,n as d,U as g,i as l,c as u};

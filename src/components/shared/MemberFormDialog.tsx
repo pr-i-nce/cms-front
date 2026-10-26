@@ -24,6 +24,7 @@ interface MemberFormDialogProps {
   departments: string[];
   roles: string[];
   onSubmit: (values: MemberFormValues) => void;
+  submitting?: boolean;
 }
 
 const emptyMember: MemberFormValues = {
@@ -54,6 +55,7 @@ const MemberFormDialog = ({
   departments,
   roles,
   onSubmit,
+  submitting = false,
 }: MemberFormDialogProps) => {
   const mergedDefaults = useMemo(
     () => normalizeMemberValues(defaultValues),
@@ -168,8 +170,8 @@ const MemberFormDialog = ({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSubmit}>Save</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>Cancel</Button>
+          <Button onClick={handleSubmit} disabled={submitting}>{submitting ? "Saving…" : "Save changes"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import StatCard from "@/components/shared/StatCard";
+import { ScreenError, ScreenLoading } from "@/components/shared/ScreenStates";
 import { useEffect, useMemo, useState } from "react";
 import { getDashboardFull } from "@/api/reports";
 import {
@@ -44,7 +45,7 @@ const CHART_COLORS = [
 ];
 
 type Activity = { id: string; action: string; details: string; time: string; type: string };
-type SmsRecord = { id: string; date: string; status: string; message?: string; recipients?: string };
+type SmsRecord = { id: string; date: string; status: string; message?: string; recipientType?: string | null; recipientCount?: number | null };
 type DashboardSummary = {
   totalMembers: number;
   activeMembers: number;
@@ -101,8 +102,8 @@ const Dashboard = () => {
   const latestSms = dashboard?.latestSms ?? null;
   const activityItems = useMemo(() => dashboard?.recentActivities ?? [], [dashboard]);
 
-  if (loading) return <div className="p-8 text-center text-muted-foreground">Loading dashboard...</div>;
-  if (loadError) return <div className="p-8 text-center text-destructive">Failed to load data: {loadError}</div>;
+  if (loading) return <ScreenLoading label="Loading dashboard" />;
+  if (loadError) return <ScreenError message={`Dashboard data could not be loaded: ${loadError}`} />;
 
   return (
     <div className="space-y-6"> 
@@ -183,7 +184,7 @@ const Dashboard = () => {
                 <div key={dept.id} className="flex items-center justify-between rounded-lg border bg-muted/30 p-3">
                   <div>
                     <p className="text-sm font-medium">{dept.name}</p>
-                    <p className="text-xs text-muted-foreground">Leader: {dept.leader}</p>
+                    <p className="text-xs text-muted-foreground">Department</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-semibold">{dept.count}</p>
@@ -226,7 +227,7 @@ const Dashboard = () => {
               <div className="rounded-lg border bg-muted/30 p-3">
                 <p className="text-sm font-medium">{latestSms.message}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {latestSms.recipientType} • {latestSms.recipientCount} recipients
+                  {latestSms.recipientType ?? "Broadcast"} • {latestSms.recipientCount ?? 0} recipients
                 </p>
               </div>
               <div className="flex items-center justify-between text-xs text-muted-foreground">

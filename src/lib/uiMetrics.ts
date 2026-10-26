@@ -1,7 +1,11 @@
 import { apiPost } from "@/lib/api";
 
-const STORAGE_KEY = "ui-latency-events";
-const MAX_EVENTS = 2000;
+const configuredThreshold = import.meta.env.VITE_LATENCY_PERSIST_THRESHOLD_MS;
+const parsedThreshold = Number(configuredThreshold);
+const PERSIST_THRESHOLD_MS = configuredThreshold && Number.isFinite(parsedThreshold) && parsedThreshold >= 0
+  ? parsedThreshold
+  : 500;
+const MAX_QUEUED_EVENTS = 100;
 const MAX_BATCH = 50;
 const FLUSH_MS = 4000;
 
@@ -9,25 +13,6 @@ export type UiLatencyEntry = {
   path: string;
   durationMs: number;
   timestamp: string;
-};
-
-export const listUiLatency = (): UiLatencyEntry[] => {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
-
-export const recordUiLatency = (entry: UiLatencyEntry) => {
-  if (typeof window === "undefined") return;
-  const existing = listUiLatency();
-  const next = [entry, ...existing].slice(0, MAX_EVENTS);
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
 };
 
 let queue: UiLatencyEntry[] = [];
@@ -45,10 +30,10 @@ const flush = async () => {
 };
 
 export const enqueueUiLatency = (entry: UiLatencyEntry) => {
-  recordUiLatency(entry);
+  if (entry.durationMs < PERSIST_THRESHOLD_MS) return;
   queue.push(entry);
-  if (queue.length > MAX_EVENTS) {
-    queue = queue.slice(-MAX_EVENTS);
+  if (queue.length > MAX_QUEUED_EVENTS) {
+    queue = queue.slice(-MAX_QUEUED_EVENTS);
   }
   if (flushTimer) return;
   flushTimer = window.setTimeout(async () => {

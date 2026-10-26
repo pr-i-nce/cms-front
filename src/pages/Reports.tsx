@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PaginationControls from "@/components/shared/PaginationControls";
+import { ScreenError, ScreenLoading } from "@/components/shared/ScreenStates";
 
 const COLORS = [
   "hsl(158, 42%, 30%)", "hsl(40, 58%, 52%)", "hsl(13, 56%, 56%)",
@@ -25,16 +26,72 @@ const ChartCard = ({ title, children, delay = 0 }: { title: string; children: Re
   </div>
 );
 
+type BackendLatencyRow = {
+  environment?: string | null;
+  method: string;
+  path: string;
+  status: number;
+  durationMs: number;
+  databaseDurationMs?: number | null;
+  databaseQueryCount?: number | null;
+  appDurationMs?: number | null;
+  sampleCount?: number | null;
+  maxDurationMs?: number | null;
+  timestamp: string;
+};
+type ReportPoint = { month?: string; members?: number; newMembers?: number; department?: string; count?: number };
+type ReportSummary = { membershipTrend?: ReportPoint[]; departmentDistribution?: ReportPoint[]; smsActivity?: ReportPoint[] };
+type UiLatencyRow = { path: string; durationMs: number; sampleCount?: number | null; maxDurationMs?: number | null; timestamp: string };
+
+const BackendLatencyTable = ({ rows }: { rows: BackendLatencyRow[] }) => (
+  <div className="rounded-lg border overflow-x-auto">
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Environment</TableHead><TableHead>Method</TableHead><TableHead>Path</TableHead>
+          <TableHead>Status</TableHead><TableHead>Avg total ms</TableHead><TableHead>Peak ms</TableHead><TableHead>Samples</TableHead><TableHead>DB ms*</TableHead>
+          <TableHead>DB queries</TableHead><TableHead>App ms*</TableHead><TableHead>Likely bottleneck</TableHead><TableHead>Timestamp</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {rows.map((item, idx) => {
+          const databaseMeasured = item.databaseDurationMs != null;
+          const bottleneck = !databaseMeasured
+            ? "Legacy"
+            : item.databaseDurationMs! >= item.durationMs / 2 ? "Database" : "Backend / other";
+          return (
+            <TableRow key={`${item.method}-${item.path}-${item.timestamp}-${idx}`}>
+              <TableCell>{item.environment || "Legacy"}</TableCell>
+              <TableCell>{item.method}</TableCell>
+              <TableCell className="max-w-[240px] truncate" title={item.path}>{item.path}</TableCell>
+              <TableCell>{item.status}</TableCell>
+              <TableCell className="font-medium">{item.durationMs}</TableCell>
+              <TableCell>{item.maxDurationMs ?? item.durationMs}</TableCell>
+              <TableCell>{item.sampleCount ?? 1}</TableCell>
+              <TableCell>{databaseMeasured ? item.databaseDurationMs : "—"}</TableCell>
+              <TableCell>{item.databaseQueryCount ?? "—"}</TableCell>
+              <TableCell>{item.appDurationMs ?? "—"}</TableCell>
+              <TableCell><Badge variant={bottleneck === "Database" ? "destructive" : "secondary"}>{bottleneck}</Badge></TableCell>
+              <TableCell className="whitespace-nowrap">{item.timestamp}</TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
+  </div>
+);
+
 const Reports = () => {
-  const [summary, setSummary] = useState<any>(null);
-  const [backendRequests, setBackendRequests] = useState<any[]>([]);
+  const [summary, setSummary] = useState<ReportSummary | null>(null);
+  const [backendRequests, setBackendRequests] = useState<BackendLatencyRow[]>([]);
   const [thresholdMs, setThresholdMs] = useState(150);
+  const [persistenceThresholdMs, setPersistenceThresholdMs] = useState(500);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [backendPage, setBackendPage] = useState(1);
   const [backendMeta, setBackendMeta] = useState<{ page: number; pageSize: number; total: number; totalPages: number } | null>(null);
   const [uiPage, setUiPage] = useState(1);
-  const [uiEvents, setUiEvents] = useState<any[]>([]);
+  const [uiEvents, setUiEvents] = useState<UiLatencyRow[]>([]);
   const [uiMeta, setUiMeta] = useState<{ page: number; pageSize: number; total: number; totalPages: number } | null>(null);
   const [performanceTab, setPerformanceTab] = useState("backend");
 
@@ -62,6 +119,7 @@ const Reports = () => {
         const allRes = await getRequestMetrics({ page: backendPage, pageSize: PERF_PAGE_SIZE });
         setBackendRequests(allRes.data?.items ?? []);
         setThresholdMs(allRes.data?.thresholdMs ?? 150);
+        setPersistenceThresholdMs(allRes.data?.persistenceThresholdMs ?? 500);
         setBackendMeta(allRes.data?.pagination ?? null);
       } catch (err) {
         setLoadError(err instanceof Error ? err.message : "Failed to load data");
@@ -90,33 +148,44 @@ const Reports = () => {
     loadUiMetrics();
   }, [performanceTab, uiPage]);
 
-  if (loading) return <div className="p-8 text-center text-muted-foreground">Loading reports...</div>;
-  if (loadError) return <div className="p-8 text-center text-destructive">Failed to load data: {loadError}</div>;
+  if (loading) return <ScreenLoading label="Loading reports" />;
+  if (loadError) return <ScreenError message={`Reports could not be loaded: ${loadError}`} />;
 
   const monthlyMembershipData = summary?.membershipTrend ?? [];
   const departmentDistribution = summary?.departmentDistribution ?? [];
   const smsActivityData = summary?.smsActivity ?? [];
   const backendCount = backendMeta?.total ?? backendRequests.length;
+  const backendSampleCount = backendRequests.reduce((sum, item) => sum + (item.sampleCount ?? 1), 0);
   const backendAvg = backendRequests.length
-    ? Math.round(backendRequests.reduce((sum, item) => sum + (item.durationMs || 0), 0) / backendRequests.length)
+    ? Math.round(backendRequests.reduce((sum, item) => sum + (item.durationMs || 0) * (item.sampleCount ?? 1), 0) / backendSampleCount)
     : 0;
   const backendMax = backendRequests.length
-    ? Math.max(...backendRequests.map((item) => item.durationMs || 0))
+    ? Math.max(...backendRequests.map((item) => item.maxDurationMs ?? item.durationMs ?? 0))
     : 0;
   const backendSlowList = backendRequests.filter((item) => (item.durationMs || 0) >= thresholdMs);
-  const backendFastList = backendRequests.filter((item) => (item.durationMs || 0) < thresholdMs);
+  const backendErrorList = backendRequests.filter((item) => item.status >= 500);
+  const databaseSlowList = backendRequests.filter((item) => item.databaseDurationMs != null && item.databaseDurationMs >= thresholdMs);
+  const appSlowList = backendRequests.filter((item) => item.appDurationMs != null && item.appDurationMs >= thresholdMs);
+  const measuredRequests = backendRequests.filter((item) => item.databaseDurationMs != null);
+  const measuredSampleCount = measuredRequests.reduce((sum, item) => sum + (item.sampleCount ?? 1), 0);
+  const databaseAvg = measuredRequests.length
+    ? Math.round(measuredRequests.reduce((sum, item) => sum + Number(item.databaseDurationMs || 0) * (item.sampleCount ?? 1), 0) / measuredSampleCount)
+    : null;
+  const appAvg = measuredRequests.length
+    ? Math.round(measuredRequests.reduce((sum, item) => sum + Number(item.appDurationMs || 0) * (item.sampleCount ?? 1), 0) / measuredSampleCount)
+    : null;
 
   const uiTotal = uiMeta?.total ?? uiEvents.length;
   const uiTotalPages = uiMeta?.totalPages ?? Math.max(1, Math.ceil(uiTotal / PERF_PAGE_SIZE));
   const uiPageItems = uiEvents;
+  const uiSampleCount = uiPageItems.reduce((sum, item) => sum + (item.sampleCount ?? 1), 0);
   const uiAvg = uiPageItems.length
-    ? Math.round(uiPageItems.reduce((sum, item) => sum + (item.durationMs || 0), 0) / uiPageItems.length)
+    ? Math.round(uiPageItems.reduce((sum, item) => sum + (item.durationMs || 0) * (item.sampleCount ?? 1), 0) / uiSampleCount)
     : 0;
   const uiMax = uiPageItems.length
-    ? Math.max(...uiPageItems.map((item) => item.durationMs || 0))
+    ? Math.max(...uiPageItems.map((item) => item.maxDurationMs ?? item.durationMs ?? 0))
     : 0;
   const uiSlowList = uiPageItems.filter((item) => (item.durationMs || 0) >= thresholdMs);
-  const uiFastList = uiPageItems.filter((item) => (item.durationMs || 0) < thresholdMs);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -170,7 +239,7 @@ const Reports = () => {
                 dataKey="count"
                 paddingAngle={3}
               >
-                {departmentDistribution.map((_: any, i: number) => (
+                {departmentDistribution.map((_, i) => (
                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
                 ))}
               </Pie>
@@ -186,11 +255,18 @@ const Reports = () => {
           <div>
             <h3 className="font-semibold">System Performance</h3>
             <p className="text-xs text-muted-foreground">Backend and UI latency (threshold {thresholdMs}ms)</p>
+            <p className="mt-1 text-xs text-muted-foreground">DB ms is cumulative Prisma query time; App ms is the remaining request time estimate. Parallel DB queries can make cumulative DB time exceed total request time.</p>
+            <p className="mt-1 text-xs text-muted-foreground">Only server errors and requests at or above {persistenceThresholdMs}ms are grouped in memory and written to the database once per minute. Faster requests stay in a bounded in-memory window; UI samples below the threshold are discarded in the browser.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary">Backend Total: {backendCount}</Badge>
+            <Badge variant="secondary">Issue buckets: {backendCount}</Badge>
+            <Badge variant="secondary">Issue samples (page): {backendSampleCount}</Badge>
             <Badge variant="secondary">Backend Avg (page): {backendAvg}ms</Badge>
             <Badge variant="secondary">Backend Max (page): {backendMax}ms</Badge>
+            <Badge variant="secondary">DB Avg (page): {databaseAvg == null ? "—" : `${databaseAvg}ms`}</Badge>
+            <Badge variant="secondary">App Avg (page): {appAvg == null ? "—" : `${appAvg}ms`}</Badge>
+            <Badge variant="secondary">DB slow: {databaseSlowList.length}</Badge>
+            <Badge variant="secondary">App slow: {appSlowList.length}</Badge>
             <Badge variant="secondary">UI Total: {uiTotal}</Badge>
           </div>
         </div>
@@ -204,37 +280,16 @@ const Reports = () => {
               <TabsList className="mb-3">
                 <TabsTrigger value="all">All</TabsTrigger>
                 <TabsTrigger value="slow">Slow</TabsTrigger>
-                <TabsTrigger value="fast">Fast</TabsTrigger>
+                <TabsTrigger value="database">Slow database</TabsTrigger>
+                <TabsTrigger value="application">Slow backend</TabsTrigger>
+                <TabsTrigger value="errors">Server errors</TabsTrigger>
               </TabsList>
               <TabsContent value="all">
                 {backendRequests.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No requests logged yet.</p>
                 ) : (
                   <>
-                    <div className="rounded-lg border overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Method</TableHead>
-                            <TableHead>Path</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Duration (ms)</TableHead>
-                            <TableHead>Timestamp</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {backendRequests.map((item, idx) => (
-                            <TableRow key={`${item.method}-${item.path}-${idx}`}>
-                              <TableCell>{item.method}</TableCell>
-                              <TableCell className="max-w-[280px] truncate">{item.path}</TableCell>
-                              <TableCell>{item.status}</TableCell>
-                              <TableCell>{item.durationMs}</TableCell>
-                              <TableCell>{item.timestamp}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
+                    <BackendLatencyTable rows={backendRequests} />
                     {backendMeta && (
                       <PaginationControls
                         currentPage={backendMeta.page}
@@ -251,60 +306,20 @@ const Reports = () => {
                 {backendSlowList.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No slow requests logged yet.</p>
                 ) : (
-                  <div className="rounded-lg border overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Method</TableHead>
-                          <TableHead>Path</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Duration (ms)</TableHead>
-                          <TableHead>Timestamp</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {backendSlowList.map((item, idx) => (
-                          <TableRow key={`${item.method}-${item.path}-${idx}`}>
-                            <TableCell>{item.method}</TableCell>
-                            <TableCell className="max-w-[280px] truncate">{item.path}</TableCell>
-                            <TableCell>{item.status}</TableCell>
-                            <TableCell>{item.durationMs}</TableCell>
-                            <TableCell>{item.timestamp}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+                  <BackendLatencyTable rows={backendSlowList} />
                 )}
               </TabsContent>
-              <TabsContent value="fast">
-                {backendFastList.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No fast requests logged yet.</p>
+              <TabsContent value="database">
+                {databaseSlowList.length ? <BackendLatencyTable rows={databaseSlowList} /> : <p className="text-sm text-muted-foreground">No measured slow database requests on this page.</p>}
+              </TabsContent>
+              <TabsContent value="application">
+                {appSlowList.length ? <BackendLatencyTable rows={appSlowList} /> : <p className="text-sm text-muted-foreground">No measured slow backend overhead on this page.</p>}
+              </TabsContent>
+              <TabsContent value="errors">
+                {backendErrorList.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No server errors logged on this page.</p>
                 ) : (
-                  <div className="rounded-lg border overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Method</TableHead>
-                          <TableHead>Path</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Duration (ms)</TableHead>
-                          <TableHead>Timestamp</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {backendFastList.map((item, idx) => (
-                          <TableRow key={`${item.method}-${item.path}-${idx}`}>
-                            <TableCell>{item.method}</TableCell>
-                            <TableCell className="max-w-[280px] truncate">{item.path}</TableCell>
-                            <TableCell>{item.status}</TableCell>
-                            <TableCell>{item.durationMs}</TableCell>
-                            <TableCell>{item.timestamp}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+                  <BackendLatencyTable rows={backendErrorList} />
                 )}
               </TabsContent>
             </Tabs>
@@ -314,7 +329,6 @@ const Reports = () => {
               <TabsList className="mb-3">
                 <TabsTrigger value="all">All</TabsTrigger>
                 <TabsTrigger value="slow">Slow</TabsTrigger>
-                <TabsTrigger value="fast">Fast</TabsTrigger>
               </TabsList>
               <TabsContent value="all">
                 {uiPageItems.length === 0 ? (
@@ -326,7 +340,9 @@ const Reports = () => {
                         <TableHeader>
                           <TableRow>
                             <TableHead>Path</TableHead>
-                            <TableHead>Duration (ms)</TableHead>
+                            <TableHead>Avg ms</TableHead>
+                            <TableHead>Peak ms</TableHead>
+                            <TableHead>Samples</TableHead>
                             <TableHead>Timestamp</TableHead>
                           </TableRow>
                         </TableHeader>
@@ -335,6 +351,8 @@ const Reports = () => {
                             <TableRow key={`${item.path}-${idx}`}>
                               <TableCell className="max-w-[280px] truncate">{item.path}</TableCell>
                               <TableCell>{item.durationMs}</TableCell>
+                              <TableCell>{item.maxDurationMs ?? item.durationMs}</TableCell>
+                              <TableCell>{item.sampleCount ?? 1}</TableCell>
                               <TableCell>{item.timestamp}</TableCell>
                             </TableRow>
                           ))}
@@ -349,6 +367,7 @@ const Reports = () => {
                       onPageChange={setUiPage}
                     />
                     <div className="mt-2 flex flex-wrap gap-2">
+                      <Badge variant="secondary">UI Samples (page): {uiSampleCount}</Badge>
                       <Badge variant="secondary">UI Avg (page): {uiAvg}ms</Badge>
                       <Badge variant="secondary">UI Max (page): {uiMax}ms</Badge>
                     </div>
@@ -364,7 +383,9 @@ const Reports = () => {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Path</TableHead>
-                          <TableHead>Duration (ms)</TableHead>
+                          <TableHead>Avg ms</TableHead>
+                          <TableHead>Peak ms</TableHead>
+                          <TableHead>Samples</TableHead>
                           <TableHead>Timestamp</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -373,32 +394,8 @@ const Reports = () => {
                           <TableRow key={`${item.path}-${idx}`}>
                             <TableCell className="max-w-[280px] truncate">{item.path}</TableCell>
                             <TableCell>{item.durationMs}</TableCell>
-                            <TableCell>{item.timestamp}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </TabsContent>
-              <TabsContent value="fast">
-                {uiFastList.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No fast UI events on this page.</p>
-                ) : (
-                  <div className="rounded-lg border overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Path</TableHead>
-                          <TableHead>Duration (ms)</TableHead>
-                          <TableHead>Timestamp</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {uiFastList.map((item, idx) => (
-                          <TableRow key={`${item.path}-${idx}`}>
-                            <TableCell className="max-w-[280px] truncate">{item.path}</TableCell>
-                            <TableCell>{item.durationMs}</TableCell>
+                            <TableCell>{item.maxDurationMs ?? item.durationMs}</TableCell>
+                            <TableCell>{item.sampleCount ?? 1}</TableCell>
                             <TableCell>{item.timestamp}</TableCell>
                           </TableRow>
                         ))}

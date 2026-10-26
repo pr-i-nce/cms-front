@@ -9,10 +9,11 @@ import { Camera, Shield, ShieldCheck, Bell, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/shared/ConfirmProvider";
 import { getUser, updateUser } from "@/api/users";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/useAuth";
 import { usePermissions } from "@/lib/permissions";
 import { formatDateValue } from "@/lib/format";
 import AppInstallSetting from "@/components/shared/AppInstallSetting";
+import { ScreenError, ScreenLoading } from "@/components/shared/ScreenStates";
 
 type AuditFields = {
   createdBy: string;
@@ -173,11 +174,11 @@ const Profile = () => {
   }, [profile]);
 
   if (loading) {
-    return <div className="space-y-6"><AppInstallSetting /><div className="p-8 text-center text-muted-foreground">Loading profile...</div></div>;
+    return <div className="space-y-6"><AppInstallSetting /><ScreenLoading label="Loading account settings" /></div>;
   }
 
   if (loadError) {
-    return <div className="space-y-6"><AppInstallSetting /><div className="p-8 text-center text-destructive">{loadError}</div></div>;
+    return <div className="space-y-6"><AppInstallSetting /><ScreenError message={`Account settings could not be loaded: ${loadError}`} /></div>;
   }
 
   if (!profile) {

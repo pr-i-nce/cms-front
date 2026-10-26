@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import SearchableSelect from "@/components/shared/SearchableSelect";
 import { useConfirm } from "@/components/shared/ConfirmProvider";
 import { toast } from "sonner";
+import { ScreenError, ScreenLoading } from "@/components/shared/ScreenStates";
 
 type Branch = {
   id: string;
@@ -255,8 +256,8 @@ const Branches = () => {
     );
   }
 
-  if (loading) return <div className="p-8 text-center text-muted-foreground">Loading branches...</div>;
-  if (loadError) return <div className="p-8 text-center text-destructive">Failed to load data: {loadError}</div>;
+  if (loading) return <ScreenLoading label="Loading branches" />;
+  if (loadError) return <ScreenError message={`Branches could not be loaded: ${loadError}`} />;
 
   return (
     <div className="space-y-6 animate-fade-in">

@@ -2,7 +2,7 @@ import { Bell, Menu, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/useAuth";
 
 interface TopNavProps {
   onMenuToggle?: () => void;
@@ -13,7 +13,20 @@ const TopNav = ({ onMenuToggle, showMenuButton }: TopNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const section = location.pathname === "/" ? "Overview" : location.pathname.split("/").filter(Boolean).slice(-1)[0]?.replace(/-/g, " ") ?? "Overview";
+  const section = (() => {
+    const path = location.pathname;
+    if (path === "/") return "Dashboard";
+    if (path.startsWith("/membership/member/")) return "Member profile";
+    if (path.startsWith("/membership/department/")) return "Department";
+    if (path.startsWith("/membership/committee/")) return "Committee";
+    if (path.startsWith("/membership")) return "Membership";
+    if (path.startsWith("/sms")) return "SMS center";
+    if (path.startsWith("/branches")) return "Branches";
+    if (path.startsWith("/users")) return "User management";
+    if (path.startsWith("/reports")) return "Reports";
+    if (path.startsWith("/profile")) return "Settings";
+    return "Church office";
+  })();
 
   return (
     <header className="app-topbar sticky top-0 z-20 flex h-[76px] items-center justify-between border-b px-4 sm:px-7">
@@ -23,9 +36,9 @@ const TopNav = ({ onMenuToggle, showMenuButton }: TopNavProps) => {
             <Menu className="h-5 w-5" />
           </Button>
         )}
-        <div className="hidden sm:block">
-          <p className="text-[0.62rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Peniel Christian Church</p>
-          <h2 className="mt-0.5 text-base font-semibold capitalize text-foreground">{section}</h2>
+        <div className="min-w-0">
+          <p className="hidden text-[0.62rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground sm:block">Peniel Christian Church</p>
+          <h2 className="truncate text-sm font-semibold text-foreground sm:mt-0.5 sm:text-base">{section}</h2>
         </div>
       </div>
       <div className="flex items-center gap-2">

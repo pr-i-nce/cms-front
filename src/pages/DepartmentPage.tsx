@@ -17,6 +17,7 @@ import { ApiMeta } from "@/lib/api";
 import { lookupMembers, updateMember } from "@/api/members";
 import { getDepartment, listDepartments, listDepartmentMembers, addDepartmentMember, removeDepartmentMember, listDepartmentRoles } from "@/api/departments";
 import { usePermissions } from "@/lib/permissions";
+import { ScreenError, ScreenLoading } from "@/components/shared/ScreenStates";
 import SmsQuickSendDialog from "@/components/shared/SmsQuickSendDialog";
 
 type AuditFields = {
@@ -225,8 +226,8 @@ const DepartmentPage = () => {
     setQuickSmsOpen(true);
   };
 
-  if (loading) return <div className="p-8 text-center text-muted-foreground">Loading department...</div>;
-  if (loadError) return <div className="p-8 text-center text-destructive">Failed to load data: {loadError}</div>;
+  if (loading) return <ScreenLoading label="Loading department" />;
+  if (loadError) return <ScreenError message={`Department data could not be loaded: ${loadError}`} />;
   if (!dept) return <div className="p-8 text-center text-muted-foreground">Department not found</div>;
 
   return (

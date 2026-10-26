@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import TopNav from "./TopNav";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -9,8 +10,11 @@ interface AppLayoutProps {
 
 const AppLayout = ({ children }: AppLayoutProps) => {
   const isMobile = useIsMobile();
+  const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => setMobileOpen(false), [location.pathname]);
 
   return (
     <div className="app-frame flex min-h-screen w-full bg-background">

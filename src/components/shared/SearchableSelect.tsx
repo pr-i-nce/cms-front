@@ -12,12 +12,9 @@ export type SearchableSelectItem = {
   disabled?: boolean;
 };
 
-interface SearchableSelectProps {
+type SearchableSelectBaseProps = {
   items: SearchableSelectItem[];
-  value: string | string[];
-  onChange: (value: string | string[]) => void;
   onSearch?: (value: string) => void;
-  multiple?: boolean;
   placeholder?: string;
   searchPlaceholder?: string;
   emptyText?: string;
@@ -25,7 +22,12 @@ interface SearchableSelectProps {
   triggerClassName?: string;
   contentClassName?: string;
   disabled?: boolean;
-}
+};
+
+type SearchableSelectProps = SearchableSelectBaseProps & (
+  | { multiple: true; value: string[]; onChange: (value: string[]) => void }
+  | { multiple?: false; value: string; onChange: (value: string) => void }
+);
 
 const SearchableSelect = ({
   items,
@@ -86,14 +88,14 @@ const SearchableSelect = ({
                 value={`${item.label} ${(item.keywords ?? []).join(" ")}`.trim()}
                 onSelect={() => {
                   if (!multiple) {
-                    onChange(item.value);
+                    (onChange as (value: string) => void)(item.value);
                     setOpen(false);
                     return;
                   }
                   const next = selectedValues.includes(item.value)
                     ? selectedValues.filter((v) => v !== item.value)
                     : [...selectedValues, item.value];
-                  onChange(next);
+                  (onChange as (value: string[]) => void)(next);
                 }}
                 disabled={item.disabled}
               >
