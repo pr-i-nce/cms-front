@@ -47,54 +47,65 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(35,91,85,0.08),_transparent_55%),linear-gradient(180deg,_rgba(248,250,252,1)_0%,_rgba(241,245,249,1)_100%)]">
-      <div className="mx-auto flex min-h-screen w-full max-w-5xl items-center px-6 py-12">
-        <div className="w-full grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="space-y-6">
-            <div className="flex items-center gap-3">
-              <div>
-                <img src="/favicon.ico" alt="Church logo" className="h-8 w-8" />
+    <div className="login-shell min-h-screen px-4 py-6 sm:px-8 sm:py-10">
+      <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-6xl items-center">
+        <div className="grid w-full items-stretch gap-5 lg:grid-cols-[1.06fr_0.94fr]">
+          <div className="login-panel relative flex min-h-[360px] flex-col justify-between overflow-hidden rounded-[2rem] p-7 text-white sm:p-10 lg:min-h-[620px]">
+            <div className="pointer-events-none absolute -right-28 -top-28 h-80 w-80 rounded-full border border-[#e0c789]/20" />
+            <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full border border-[#e0c789]/20" />
+            <div className="relative space-y-10">
+              <div className="flex items-center gap-3">
+                <div className="rounded-2xl border border-white/10 bg-white/10 p-1.5 shadow-lg">
+                  <img src="/pwa-192.png" alt="Church logo" className="h-10 w-10 rounded-xl" />
+                </div>
+                <div>
+                  <p className="text-[0.65rem] uppercase tracking-[0.23em] text-[#e0c789]">Peniel Christian Church</p>
+                  <p className="mt-1 text-sm font-medium text-white/70">Administration workspace</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Peniel Christian Church</p>
-                <h1 className="text-3xl font-semibold tracking-tight">Church Management Console</h1>
+              <div className="max-w-xl space-y-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#e0c789]">Faithful stewardship</p>
+                <h1 className="max-w-lg text-4xl font-medium leading-[1.12] tracking-tight sm:text-5xl" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+                  One trusted place to care for your church.
+                </h1>
+                <p className="max-w-md text-sm leading-7 text-white/65 sm:text-base">
+                  A thoughtful workspace for people, ministries, and the connections that help your community thrive.
+                </p>
+              </div>
+              <div className="grid gap-2 text-sm sm:grid-cols-3">
+                {[["01", "People"], ["02", "Ministries"], ["03", "Community"]].map(([number, title]) => (
+                  <div key={number} className="rounded-2xl border border-white/10 bg-white/[0.045] p-4">
+                    <span className="text-[0.62rem] font-semibold tracking-[0.16em] text-[#e0c789]">{number}</span>
+                    <p className="mt-2 font-medium text-white/90">{title}</p>
+                  </div>
+                ))}
               </div>
             </div>
-            <p className="text-muted-foreground max-w-lg">
-              Manage members, ministries, and communication from one secure workspace.
-            </p>
-            <div className="grid gap-3 text-sm text-muted-foreground">
-              <div className="flex items-center justify-between border bg-white/80 px-4 py-3">
-                <span>Member records</span>
-                <span className="text-xs font-medium text-foreground">Up to date</span>
-              </div>
-              <div className="flex items-center justify-between border bg-white/80 px-4 py-3">
-                <span>Ministry oversight</span>
-                <span className="text-xs font-medium text-foreground">Structured</span>
-              </div>
-              <div className="flex items-center justify-between border bg-white/80 px-4 py-3">
-                <span>SMS communication</span>
-                <span className="text-xs font-medium text-foreground">Ready</span>
-              </div>
-            </div>
+            <p className="relative mt-8 text-xs tracking-wide text-white/40">A secure, connected church office.</p>
           </div>
 
-          <div className="border bg-white/90 p-8 shadow-xl backdrop-blur">
+          <div className="login-card flex items-center rounded-[2rem] p-6 backdrop-blur sm:p-10 lg:p-12">
+            <div className="w-full">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Welcome</p>
-                <h2 className="text-2xl font-semibold">Sign in to continue</h2>
+                <p className="eyebrow">Welcome back</p>
+                <h2 className="page-title mt-2 text-3xl">Sign in</h2>
+                <p className="mt-2 text-sm text-muted-foreground">Enter your staff account details to continue.</p>
               </div>
-              <div className="border px-3 py-1 text-xs text-muted-foreground">Secure</div>
+              <div className="hidden items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary sm:flex">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Secure access
+              </div>
             </div>
 
-            <form onSubmit={handleLogin} className="mt-8 space-y-5">
+            <form onSubmit={handleLogin} className="mt-9 space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@church.local"
+                  placeholder="name@church.org"
+                  autoComplete="username"
+                  className="h-12 rounded-xl bg-white/70"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -106,6 +117,8 @@ const Login = () => {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
+                    autoComplete="current-password"
+                    className="h-12 rounded-xl bg-white/70 pr-11"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
@@ -134,15 +147,16 @@ const Login = () => {
                 </button>
               </div>
 
-              <Button type="submit" className="w-full gap-2" disabled={loading}>
+              <Button type="submit" className="mt-2 h-12 w-full gap-2 rounded-xl text-sm shadow-lg shadow-primary/15" disabled={loading}>
                 {loading ? "Signing in..." : "Sign in"}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </form>
 
-            <p className="mt-6 text-xs text-muted-foreground">
-              Use your staff account to access church administration tools.
+            <p className="mt-7 border-t border-border/70 pt-5 text-center text-xs leading-5 text-muted-foreground">
+              Access is reserved for authorized church staff. Your account activity is protected and audited.
             </p>
+            </div>
           </div>
         </div>
       </div>

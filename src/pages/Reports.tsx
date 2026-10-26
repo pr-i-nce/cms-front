@@ -10,8 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PaginationControls from "@/components/shared/PaginationControls";
 
 const COLORS = [
-  "hsl(173, 58%, 39%)", "hsl(38, 92%, 50%)", "hsl(340, 75%, 55%)",
-  "hsl(262, 60%, 55%)", "hsl(200, 80%, 50%)", "hsl(120, 60%, 40%)",
+  "hsl(158, 42%, 30%)", "hsl(40, 58%, 52%)", "hsl(13, 56%, 56%)",
+  "hsl(205, 28%, 48%)", "hsl(102, 22%, 47%)", "hsl(340, 35%, 58%)",
   "hsl(20, 80%, 55%)", "hsl(280, 65%, 50%)",
 ];
 

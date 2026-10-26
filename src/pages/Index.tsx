@@ -33,14 +33,14 @@ import {
 } from "recharts";
 
 const CHART_COLORS = [
-  "hsl(173, 58%, 39%)",
-  "hsl(38, 92%, 50%)",
-  "hsl(340, 75%, 55%)",
-  "hsl(262, 60%, 55%)",
-  "hsl(200, 80%, 50%)",
-  "hsl(120, 60%, 40%)",
-  "hsl(20, 80%, 55%)",
-  "hsl(280, 65%, 50%)",
+  "hsl(158, 42%, 30%)",
+  "hsl(40, 58%, 52%)",
+  "hsl(13, 56%, 56%)",
+  "hsl(205, 28%, 48%)",
+  "hsl(102, 22%, 47%)",
+  "hsl(340, 35%, 58%)",
+  "hsl(26, 48%, 54%)",
+  "hsl(180, 24%, 46%)",
 ];
 
 type Activity = { id: string; action: string; details: string; time: string; type: string };
@@ -125,16 +125,16 @@ const Dashboard = () => {
               <AreaChart data={membershipTrend}>
                 <defs>
                   <linearGradient id="colorMembers" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(173, 58%, 39%)" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(173, 58%, 39%)" stopOpacity={0} />
+                    <stop offset="5%" stopColor="hsl(158, 42%, 30%)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="hsl(158, 42%, 30%)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 90%)" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip />
-                <Area type="monotone" dataKey="members" stroke="hsl(173, 58%, 39%)" fill="url(#colorMembers)" strokeWidth={2} />
-                <Area type="monotone" dataKey="newMembers" stroke="hsl(38, 92%, 50%)" fill="hsl(38, 92%, 50%)" fillOpacity={0.15} strokeWidth={2} />
+                <Area type="monotone" dataKey="members" stroke="hsl(158, 42%, 30%)" fill="url(#colorMembers)" strokeWidth={2} />
+                <Area type="monotone" dataKey="newMembers" stroke="hsl(40, 58%, 52%)" fill="hsl(40, 58%, 52%)" fillOpacity={0.15} strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -213,8 +213,8 @@ const Dashboard = () => {
               <YAxis tick={{ fontSize: 12 }} />
               <Tooltip />
               <Legend />
-              <Bar dataKey="delivered" fill="hsl(173, 58%, 39%)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="failed" fill="hsl(340, 75%, 55%)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="delivered" fill="hsl(158, 42%, 30%)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="failed" fill="hsl(13, 56%, 56%)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

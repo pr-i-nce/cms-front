@@ -1,0 +1,18 @@
+{
+  "id": "/",
+  "name": "Peniel Christian Church Management",
+  "short_name": "Peniel CMS",
+  "description": "Secure church membership, ministry and communication management.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "theme_color": "#17382d",
+  "background_color": "#f6f3eb",
+  "icons": [
+    { "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

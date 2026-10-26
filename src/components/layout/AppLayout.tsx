@@ -13,7 +13,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="app-frame flex min-h-screen w-full bg-background">
       {/* Mobile overlay */}
       {isMobile && mobileOpen && (
         <div className="fixed inset-0 bg-foreground/50 z-20" onClick={() => setMobileOpen(false)} />
@@ -36,8 +36,8 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           showMenuButton={isMobile}
           onMenuToggle={() => setMobileOpen(!mobileOpen)}
         />
-        <main className="flex-1 p-4 sm:p-6 overflow-auto">
-          {children}
+        <main className="min-w-0 flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+          <div className="mx-auto w-full max-w-[1680px]">{children}</div>
         </main>
       </div>
     </div>

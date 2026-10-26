@@ -12,6 +12,7 @@ import { getUser, updateUser } from "@/api/users";
 import { useAuth } from "@/lib/auth";
 import { usePermissions } from "@/lib/permissions";
 import { formatDateValue } from "@/lib/format";
+import AppInstallSetting from "@/components/shared/AppInstallSetting";
 
 type AuditFields = {
   createdBy: string;
@@ -172,23 +173,26 @@ const Profile = () => {
   }, [profile]);
 
   if (loading) {
-    return <div className="p-8 text-center text-muted-foreground">Loading profile...</div>;
+    return <div className="space-y-6"><AppInstallSetting /><div className="p-8 text-center text-muted-foreground">Loading profile...</div></div>;
   }
 
   if (loadError) {
-    return <div className="p-8 text-center text-destructive">{loadError}</div>;
+    return <div className="space-y-6"><AppInstallSetting /><div className="p-8 text-center text-destructive">{loadError}</div></div>;
   }
 
   if (!profile) {
-    return <div className="p-8 text-center text-muted-foreground">Profile not found</div>;
+    return <div className="space-y-6"><AppInstallSetting /><div className="p-8 text-center text-muted-foreground">Profile not found</div></div>;
   }
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold">Profile</h1>
-        <p className="text-muted-foreground">Manage your personal information, security, and notifications</p>
+        <p className="eyebrow">Account & preferences</p>
+        <h1 className="page-title">Settings</h1>
+        <p className="text-muted-foreground">Manage your workspace, personal information, security, and notifications.</p>
       </div>
+
+      <AppInstallSetting />
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-6">
         <div className="space-y-6">
