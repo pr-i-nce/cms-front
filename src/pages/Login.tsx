@@ -45,46 +45,35 @@ const Login = () => {
   return (
     <main className="login-shell min-h-[100svh] px-3 py-3 sm:px-8 sm:py-10">
       <div className="mx-auto grid min-h-[calc(100svh-1.5rem)] w-full max-w-6xl grid-cols-1 items-center gap-5 lg:min-h-[calc(100svh-5rem)] lg:grid-cols-[1.06fr_0.94fr] lg:gap-6">
-        <section className="login-panel relative hidden min-h-[640px] flex-col justify-between overflow-hidden rounded-[2rem] p-10 text-white lg:flex xl:p-12">
-          <div className="pointer-events-none absolute -right-28 -top-28 h-80 w-80 rounded-full border border-white/10" />
-          <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full border border-accent/30" />
-          <div className="relative space-y-12">
-            <div className="flex items-center gap-3">
-              <div className="brand-mark h-14 w-14 rounded-2xl p-1">
-                <img src="/church-logo.png" alt="Peniel Christian Church logo" className="h-full w-full rounded-xl object-contain" />
-              </div>
-              <div>
-                <p className="text-[0.65rem] uppercase tracking-[0.23em] text-accent">Peniel Christian Church</p>
-                <p className="mt-1 text-sm font-medium text-white/70">Church office · Management workspace</p>
-              </div>
-            </div>
-
-            <div className="max-w-xl space-y-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent">Faithful stewardship</p>
-              <h1 className="max-w-lg text-5xl font-medium leading-[1.08] tracking-tight xl:text-6xl" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
-                Every person. Every ministry. In good hands.
-              </h1>
-              <p className="max-w-md text-sm leading-7 text-white/70 sm:text-base">
-                A calm, connected workspace for caring for your people and the life of your church.
-              </p>
-            </div>
-
-            <div className="grid gap-2 text-sm sm:grid-cols-3">
-              {[["01", "People"], ["02", "Ministries"], ["03", "Community"]].map(([number, title]) => (
-                <div key={number} className="rounded-2xl border border-white/10 bg-white/[0.055] p-4">
-                  <span className="text-[0.62rem] font-semibold tracking-[0.16em] text-accent">{number}</span>
-                  <p className="mt-2 font-medium text-white/90">{title}</p>
-                </div>
-              ))}
+        <section className="login-panel hidden min-h-[640px] flex-col justify-between border-l-[3px] border-accent px-8 py-10 lg:flex xl:px-12 xl:py-12">
+          <div className="flex items-center gap-5">
+            <img src="/church-logo.png" alt="Peniel Christian Church logo" className="h-20 w-20 shrink-0 object-contain" />
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Peniel Christian Church</p>
+              <p className="mt-1 text-sm text-muted-foreground">Church office · Kitui</p>
             </div>
           </div>
-          <p className="relative mt-8 text-xs tracking-wide text-white/55">Face to face with God · Genesis 32:30</p>
+
+          <div className="max-w-lg py-12">
+            <p className="eyebrow">Church management</p>
+            <h1 className="mt-4 max-w-md text-5xl font-medium leading-[1.12] tracking-tight text-foreground xl:text-6xl" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+              Serving our church, with care.
+            </h1>
+            <p className="mt-6 max-w-md text-base leading-7 text-muted-foreground">
+              One place for membership, ministries, and communication across the church.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 border-t border-border pt-5 text-sm text-muted-foreground">
+            <span className="h-1.5 w-1.5 shrink-0 bg-accent" />
+            <p>“Face to face with God” <span className="text-foreground/60">· Genesis 32:30</span></p>
+          </div>
         </section>
 
-        <section className="login-card flex min-h-[calc(100svh-1.5rem)] items-center rounded-[1.5rem] px-5 py-6 backdrop-blur sm:min-h-0 sm:rounded-[2rem] sm:p-10 lg:min-h-[640px] lg:p-12">
+        <section className="login-card flex min-h-[calc(100svh-1.5rem)] items-center px-5 py-6 backdrop-blur sm:min-h-0 sm:p-10 lg:min-h-[640px] lg:p-12">
           <div className="mx-auto w-full max-w-md">
-            <div className="brand-mark mb-6 flex w-fit items-center gap-3 rounded-2xl p-2.5 lg:hidden">
-              <img src="/church-logo.png" alt="Peniel Christian Church logo" className="h-11 w-11 rounded-xl object-contain" />
+            <div className="mb-6 flex w-fit items-center gap-3 lg:hidden">
+              <img src="/church-logo.png" alt="Peniel Christian Church logo" className="h-12 w-12 object-contain" />
               <span className="pr-1 text-sm font-semibold leading-tight text-foreground">
                 Peniel Christian Church
                 <span className="mt-1 block text-xs font-normal text-muted-foreground">Church office workspace</span>
