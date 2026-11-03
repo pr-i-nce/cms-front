@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Eye,
   EyeOff,
@@ -14,6 +14,8 @@ import { useAuth } from "@/lib/useAuth";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const sessionUnverified = (location.state as { reason?: string } | null)?.reason === "session-unverified";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -38,7 +40,7 @@ const Login = () => {
       const expiresAt = res.data.expiresAt || new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
       setAuth(user, permissions, { token: "", expiresAt, csrfToken });
       toast.success("Login successful!");
-      navigate("/");
+      navigate("/", { replace: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -91,6 +93,11 @@ const Login = () => {
                 <p className="eyebrow">Welcome back</p>
                 <h2 className="page-title mt-2 text-3xl">Sign in</h2>
                 <p className="mt-2 text-sm text-muted-foreground">Enter your staff account details to continue.</p>
+                {sessionUnverified && (
+                  <p className="mt-3 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950" role="status">
+                    We couldn’t verify your session. Please sign in again to continue.
+                  </p>
+                )}
               </div>
               <div className="hidden items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary sm:flex">
                 <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Secure access

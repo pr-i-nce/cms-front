@@ -11,7 +11,7 @@ const LOCAL_PERM_KEY = "permissions";
 const LOCAL_EXPIRES_KEY = "sessionExpiresAt";
 const LOCAL_CSRF_KEY = "csrfToken";
 const API_BASE_URL = getApiBaseUrl();
-const SESSION_CHECK_TIMEOUT_MS = 32_000;
+const SESSION_CHECK_TIMEOUT_MS = 10_000;
 
 const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number) => {
   let timeoutId: number | null = null;
@@ -67,6 +67,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     dispatch(clearAuth());
   }, [dispatch]);
 
+  const markSessionUnverified = useCallback(() => {
+    clearAuthState();
+    dispatch(setAuthUnavailable(true));
+    dispatch(setReady(true));
+  }, [clearAuthState, dispatch]);
+
   const scheduleExpiry = useCallback((expiresAt?: string | null) => {
     if (expiryTimerRef.current) window.clearTimeout(expiryTimerRef.current);
     if (!expiresAt) return;
@@ -118,8 +124,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               return;
             }
           } else if (response.status >= 500) {
-            dispatch(setAuthUnavailable(true));
-            dispatch(setReady(true));
+            markSessionUnverified();
             return;
           } else {
             dispatch(setSessionExpired(true));
@@ -128,8 +133,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }
         } catch (error) {
           if (error instanceof ApiRequestFailure || error instanceof TypeError || (error instanceof Error && error.message.includes("timed out"))) {
-            dispatch(setAuthUnavailable(true));
-            dispatch(setReady(true));
+            markSessionUnverified();
             return;
           }
           dispatch(setSessionExpired(true));
@@ -154,16 +158,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         error instanceof TypeError ||
         (error instanceof Error && error.message.includes("timed out"))
       ) {
-        // Keep the HttpOnly session cookie and ask the user to retry when the
-        // network or API recovers. Never trust local permissions to render data.
-        dispatch(setAuthUnavailable(true));
-        dispatch(setReady(true));
+        // Drop local session state and ask the user to authenticate again.
+        // The server still validates credentials and never trusts cached permissions.
+        markSessionUnverified();
         return;
       }
       dispatch(setSessionExpired(true));
       clearAuthState();
     }
-  }, [clearAuthState, dispatch, setAuthState]);
+  }, [clearAuthState, dispatch, markSessionUnverified, setAuthState]);
 
   useEffect(() => {
     void refresh();
