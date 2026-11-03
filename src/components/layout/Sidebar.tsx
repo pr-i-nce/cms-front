@@ -45,8 +45,8 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
     >
       {/* Logo */}
       <div className="flex h-[76px] items-center gap-3 border-b border-sidebar-border px-5">
-        <div className="shrink-0 rounded-xl border border-white/10 bg-white/5 p-1">
-          <img src="/pwa-192.png" alt="Church logo" className="h-8 w-8 rounded-lg" />
+        <div className="brand-mark h-10 w-10 shrink-0 rounded-xl p-0.5">
+          <img src="/church-logo.png" alt="Peniel Christian Church logo" className="h-full w-full rounded-lg object-contain" />
         </div>
         {!collapsed && (
         <span className="truncate text-sm font-semibold tracking-[0.16em] text-sidebar-accent-foreground">

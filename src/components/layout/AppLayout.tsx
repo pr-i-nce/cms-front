@@ -40,7 +40,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           showMenuButton={isMobile}
           onMenuToggle={() => setMobileOpen(!mobileOpen)}
         />
-        <main className="min-w-0 flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+        <main className="min-w-0 flex-1 overflow-auto p-3 sm:p-6 lg:p-8">
           <div className="mx-auto w-full max-w-[1680px]">{children}</div>
         </main>
       </div>

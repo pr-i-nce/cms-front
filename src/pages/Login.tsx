@@ -1,10 +1,6 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  Eye,
-  EyeOff,
-  ArrowRight,
-} from "lucide-react";
+import { ArrowRight, Eye, EyeOff, LoaderCircle, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,100 +17,108 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
-
   const { setAuth } = useAuth();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    if (!email || !password) {
-      toast.error("Please fill in all fields");
-      setLoading(false);
+  const handleLogin = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!email.trim() || !password) {
+      toast.error("Enter your email and password to continue.");
       return;
     }
+    setLoading(true);
     try {
-      const res = await login(email, password);
-      const user = res.data.user;
-      const permissions = Array.isArray(res.data.permissions) ? res.data.permissions : [];
-      const csrfToken = res.data.csrfToken || "";
-      const expiresAt = res.data.expiresAt || new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+      const response = await login(email.trim(), password);
+      const user = response.data.user;
+      const permissions = Array.isArray(response.data.permissions) ? response.data.permissions : [];
+      const csrfToken = response.data.csrfToken || "";
+      const expiresAt = response.data.expiresAt || new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
       setAuth(user, permissions, { token: "", expiresAt, csrfToken });
-      toast.success("Login successful!");
+      toast.success("Welcome back.");
       navigate("/", { replace: true });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Login failed");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "We couldn’t sign you in. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-shell min-h-screen px-4 py-6 sm:px-8 sm:py-10">
-      <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-6xl items-center">
-        <div className="grid w-full items-stretch gap-5 lg:grid-cols-[1.06fr_0.94fr]">
-          <div className="login-panel relative flex min-h-[360px] flex-col justify-between overflow-hidden rounded-[2rem] p-7 text-white sm:p-10 lg:min-h-[620px]">
-            <div className="pointer-events-none absolute -right-28 -top-28 h-80 w-80 rounded-full border border-[#e0c789]/20" />
-            <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full border border-[#e0c789]/20" />
-            <div className="relative space-y-10">
-              <div className="flex items-center gap-3">
-                <div className="rounded-2xl border border-white/10 bg-white/10 p-1.5 shadow-lg">
-                  <img src="/pwa-192.png" alt="Church logo" className="h-10 w-10 rounded-xl" />
-                </div>
-                <div>
-                  <p className="text-[0.65rem] uppercase tracking-[0.23em] text-[#e0c789]">Peniel Christian Church</p>
-                  <p className="mt-1 text-sm font-medium text-white/70">Administration workspace</p>
-                </div>
+    <main className="login-shell min-h-[100svh] px-3 py-3 sm:px-8 sm:py-10">
+      <div className="mx-auto grid min-h-[calc(100svh-1.5rem)] w-full max-w-6xl grid-cols-1 items-center gap-5 lg:min-h-[calc(100svh-5rem)] lg:grid-cols-[1.06fr_0.94fr] lg:gap-6">
+        <section className="login-panel relative hidden min-h-[640px] flex-col justify-between overflow-hidden rounded-[2rem] p-10 text-white lg:flex xl:p-12">
+          <div className="pointer-events-none absolute -right-28 -top-28 h-80 w-80 rounded-full border border-white/10" />
+          <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full border border-accent/30" />
+          <div className="relative space-y-12">
+            <div className="flex items-center gap-3">
+              <div className="brand-mark h-14 w-14 rounded-2xl p-1">
+                <img src="/church-logo.png" alt="Peniel Christian Church logo" className="h-full w-full rounded-xl object-contain" />
               </div>
-              <div className="max-w-xl space-y-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#e0c789]">Faithful stewardship</p>
-                <h1 className="max-w-lg text-4xl font-medium leading-[1.12] tracking-tight sm:text-5xl" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
-                  One trusted place to care for your church.
-                </h1>
-                <p className="max-w-md text-sm leading-7 text-white/65 sm:text-base">
-                  A thoughtful workspace for people, ministries, and the connections that help your community thrive.
-                </p>
-              </div>
-              <div className="grid gap-2 text-sm sm:grid-cols-3">
-                {[["01", "People"], ["02", "Ministries"], ["03", "Community"]].map(([number, title]) => (
-                  <div key={number} className="rounded-2xl border border-white/10 bg-white/[0.045] p-4">
-                    <span className="text-[0.62rem] font-semibold tracking-[0.16em] text-[#e0c789]">{number}</span>
-                    <p className="mt-2 font-medium text-white/90">{title}</p>
-                  </div>
-                ))}
+              <div>
+                <p className="text-[0.65rem] uppercase tracking-[0.23em] text-accent">Peniel Christian Church</p>
+                <p className="mt-1 text-sm font-medium text-white/70">Church office · Management workspace</p>
               </div>
             </div>
-            <p className="relative mt-8 text-xs tracking-wide text-white/40">A secure, connected church office.</p>
-          </div>
 
-          <div className="login-card flex items-center rounded-[2rem] p-6 backdrop-blur sm:p-10 lg:p-12">
-            <div className="w-full">
-            <div className="flex items-center justify-between">
+            <div className="max-w-xl space-y-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent">Faithful stewardship</p>
+              <h1 className="max-w-lg text-5xl font-medium leading-[1.08] tracking-tight xl:text-6xl" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+                Every person. Every ministry. In good hands.
+              </h1>
+              <p className="max-w-md text-sm leading-7 text-white/70 sm:text-base">
+                A calm, connected workspace for caring for your people and the life of your church.
+              </p>
+            </div>
+
+            <div className="grid gap-2 text-sm sm:grid-cols-3">
+              {[["01", "People"], ["02", "Ministries"], ["03", "Community"]].map(([number, title]) => (
+                <div key={number} className="rounded-2xl border border-white/10 bg-white/[0.055] p-4">
+                  <span className="text-[0.62rem] font-semibold tracking-[0.16em] text-accent">{number}</span>
+                  <p className="mt-2 font-medium text-white/90">{title}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <p className="relative mt-8 text-xs tracking-wide text-white/55">Face to face with God · Genesis 32:30</p>
+        </section>
+
+        <section className="login-card flex min-h-[calc(100svh-1.5rem)] items-center rounded-[1.5rem] px-5 py-6 backdrop-blur sm:min-h-0 sm:rounded-[2rem] sm:p-10 lg:min-h-[640px] lg:p-12">
+          <div className="mx-auto w-full max-w-md">
+            <div className="brand-mark mb-6 flex w-fit items-center gap-3 rounded-2xl p-2.5 lg:hidden">
+              <img src="/church-logo.png" alt="Peniel Christian Church logo" className="h-11 w-11 rounded-xl object-contain" />
+              <span className="pr-1 text-sm font-semibold leading-tight text-foreground">
+                Peniel Christian Church
+                <span className="mt-1 block text-xs font-normal text-muted-foreground">Church office workspace</span>
+              </span>
+            </div>
+
+            <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="eyebrow">Welcome back</p>
-                <h2 className="page-title mt-2 text-3xl">Sign in</h2>
-                <p className="mt-2 text-sm text-muted-foreground">Enter your staff account details to continue.</p>
+                <h2 className="page-title mt-1 text-3xl sm:text-4xl">Sign in</h2>
+                <p className="mt-2 max-w-xs text-sm leading-6 text-muted-foreground">Use your staff account to continue caring for your church.</p>
                 {sessionUnverified && (
-                  <p className="mt-3 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950" role="status">
+                  <p className="mt-4 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950" role="status">
                     We couldn’t verify your session. Please sign in again to continue.
                   </p>
                 )}
               </div>
-              <div className="hidden items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary sm:flex">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Secure access
+              <div className="hidden shrink-0 items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary sm:flex">
+                <ShieldCheck className="h-3.5 w-3.5 text-accent" /> Staff portal
               </div>
             </div>
 
-            <form onSubmit={handleLogin} className="mt-9 space-y-5">
+            <form onSubmit={handleLogin} className="mt-7 space-y-4 sm:mt-9 sm:space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email address</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="name@church.org"
+                  placeholder="you@church.org"
                   autoComplete="username"
-                  className="h-12 rounded-xl bg-white/70"
+                  className="login-input h-12 rounded-xl"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(event) => setEmail(event.target.value)}
+                  required
                 />
               </div>
               <div className="space-y-2">
@@ -123,51 +127,49 @@ const Login = () => {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
+                    placeholder="Enter your password"
                     autoComplete="current-password"
-                    className="h-12 rounded-xl bg-white/70 pr-11"
+                    className="login-input h-12 rounded-xl pr-12"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(event) => setPassword(event.target.value)}
+                    required
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowPassword((visible) => !visible)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <div className="flex items-center justify-between gap-3 py-1">
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
                   <input
                     type="checkbox"
                     checked={remember}
-                    onChange={(e) => setRemember(e.target.checked)}
+                    onChange={(event) => setRemember(event.target.checked)}
                     className="rounded border-input"
                   />
                   Remember me
                 </label>
-                <button type="button" className="text-sm text-primary hover:underline">
-                  Forgot Password?
-                </button>
+                <span className="text-right text-xs text-muted-foreground">Need access help? Contact your church administrator.</span>
               </div>
 
-              <Button type="submit" className="mt-2 h-12 w-full gap-2 rounded-xl text-sm shadow-lg shadow-primary/15" disabled={loading}>
-                {loading ? "Signing in..." : "Sign in"}
-                <ArrowRight className="h-4 w-4" />
+              <Button type="submit" className="mt-2 h-12 w-full gap-2 rounded-xl text-sm font-semibold shadow-lg shadow-primary/15" disabled={loading}>
+                {loading ? <><LoaderCircle className="h-4 w-4 animate-spin" /> Signing in…</> : <>Sign in <ArrowRight className="h-4 w-4" /></>}
               </Button>
             </form>
 
-            <p className="mt-7 border-t border-border/70 pt-5 text-center text-xs leading-5 text-muted-foreground">
-              Access is reserved for authorized church staff. Your account activity is protected and audited.
+            <p className="mt-6 border-t border-border/70 pt-4 text-center text-xs leading-5 text-muted-foreground sm:mt-7 sm:pt-5">
+              Access is reserved for authorized church staff. Account activity is protected and audited.
             </p>
-            </div>
           </div>
-        </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 };
 

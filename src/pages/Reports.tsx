@@ -11,9 +11,9 @@ import PaginationControls from "@/components/shared/PaginationControls";
 import { ScreenError, ScreenLoading } from "@/components/shared/ScreenStates";
 
 const COLORS = [
-  "hsl(158, 42%, 30%)", "hsl(40, 58%, 52%)", "hsl(13, 56%, 56%)",
-  "hsl(205, 28%, 48%)", "hsl(102, 22%, 47%)", "hsl(340, 35%, 58%)",
-  "hsl(20, 80%, 55%)", "hsl(280, 65%, 50%)",
+  "hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))", "hsl(var(--chart-5))", "hsl(var(--chart-6))",
+  "hsl(221 38% 49%)", "hsl(20 41% 58%)",
 ];
 
 const ChartCard = ({ title, children, delay = 0 }: { title: string; children: React.ReactNode; delay?: number }) => (
@@ -204,7 +204,7 @@ const Reports = () => {
                   <stop offset="95%" stopColor={COLORS[0]} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 90%)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="month" tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} />
               <Tooltip />
@@ -217,7 +217,7 @@ const Reports = () => {
         <ChartCard title="SMS Activity" delay={100}>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={smsActivityData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 90%)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="month" tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} />
               <Tooltip />

@@ -34,14 +34,14 @@ import {
 } from "recharts";
 
 const CHART_COLORS = [
-  "hsl(158, 42%, 30%)",
-  "hsl(40, 58%, 52%)",
-  "hsl(13, 56%, 56%)",
-  "hsl(205, 28%, 48%)",
-  "hsl(102, 22%, 47%)",
-  "hsl(340, 35%, 58%)",
-  "hsl(26, 48%, 54%)",
-  "hsl(180, 24%, 46%)",
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
+  "hsl(var(--chart-5))",
+  "hsl(var(--chart-6))",
+  "hsl(221 38% 49%)",
+  "hsl(20 41% 58%)",
 ];
 
 type Activity = { id: string; action: string; details: string; time: string; type: string };
@@ -126,16 +126,16 @@ const Dashboard = () => {
               <AreaChart data={membershipTrend}>
                 <defs>
                   <linearGradient id="colorMembers" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(158, 42%, 30%)" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(158, 42%, 30%)" stopOpacity={0} />
+                    <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 90%)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip />
-                <Area type="monotone" dataKey="members" stroke="hsl(158, 42%, 30%)" fill="url(#colorMembers)" strokeWidth={2} />
-                <Area type="monotone" dataKey="newMembers" stroke="hsl(40, 58%, 52%)" fill="hsl(40, 58%, 52%)" fillOpacity={0.15} strokeWidth={2} />
+                <Area type="monotone" dataKey="members" stroke="hsl(var(--chart-1))" fill="url(#colorMembers)" strokeWidth={2} />
+                <Area type="monotone" dataKey="newMembers" stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2))" fillOpacity={0.15} strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -209,13 +209,13 @@ const Dashboard = () => {
           </div>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={smsActivityData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 90%)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="month" tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} />
               <Tooltip />
               <Legend />
-              <Bar dataKey="delivered" fill="hsl(158, 42%, 30%)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="failed" fill="hsl(13, 56%, 56%)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="delivered" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="failed" fill="hsl(var(--chart-3))" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

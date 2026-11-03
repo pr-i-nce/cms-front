@@ -168,7 +168,7 @@ const MemberProfile = () => {
         <span className="hidden text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground sm:block">Member record</span>
       </div>
 
-      <section className="relative overflow-hidden rounded-3xl border border-border/70 bg-card shadow-[0_22px_60px_-44px_hsl(158_32%_14%_/_0.45)]">
+      <section className="relative overflow-hidden rounded-3xl border border-border/70 bg-card shadow-[0_22px_60px_-44px_hsl(239_40%_18%_/_0.36)]">
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-[hsl(var(--accent))] to-primary/40" />
         <div className="flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
           <div className="flex min-w-0 items-center gap-5">

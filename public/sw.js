@@ -1,6 +1,9 @@
-const SHELL_CACHE = "peniel-shell-v1";
-const ASSET_CACHE = "peniel-assets-v1";
-const APP_SHELL = ["/", "/index.html", "/manifest.webmanifest", "/pwa-192.png", "/pwa-512.png"];
+const SHELL_CACHE = "peniel-shell-v2";
+const ASSET_CACHE = "peniel-assets-v2";
+const APP_SHELL = [
+  "/", "/index.html", "/manifest.webmanifest", "/church-logo.png",
+  "/pwa-192.png", "/pwa-512.png", "/pwa-maskable-512.png", "/apple-touch-icon.png", "/favicon.ico",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(SHELL_CACHE).then((cache) => cache.addAll(APP_SHELL)));

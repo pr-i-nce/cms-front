@@ -12,10 +12,10 @@ interface StatCardProps {
 }
 
 const colorMap = {
-  primary: { bg: "bg-primary/5", border: "border-primary/15", text: "text-primary", icon: "bg-primary/10", spark: "hsl(158, 42%, 30%)" },
-  accent: { bg: "bg-accent/5", border: "border-accent/15", text: "text-accent", icon: "bg-accent/10", spark: "hsl(40, 58%, 52%)" },
-  rose: { bg: "bg-chart-3/5", border: "border-chart-3/15", text: "text-chart-3", icon: "bg-chart-3/10", spark: "hsl(13, 56%, 56%)" },
-  violet: { bg: "bg-chart-4/5", border: "border-chart-4/15", text: "text-chart-4", icon: "bg-chart-4/10", spark: "hsl(205, 28%, 48%)" },
+  primary: { bg: "bg-primary/5", border: "border-primary/15", text: "text-primary", icon: "bg-primary/10", spark: "hsl(var(--chart-1))" },
+  accent: { bg: "bg-accent/10", border: "border-accent/20", text: "text-accent-foreground", icon: "bg-accent/15", spark: "hsl(var(--chart-2))" },
+  rose: { bg: "bg-chart-3/5", border: "border-chart-3/15", text: "text-chart-3", icon: "bg-chart-3/10", spark: "hsl(var(--chart-3))" },
+  violet: { bg: "bg-chart-5/5", border: "border-chart-5/15", text: "text-chart-5", icon: "bg-chart-5/10", spark: "hsl(var(--chart-5))" },
 };
 
 const StatCard = ({ title, value, icon: Icon, gradient, delay = 0, subtitle, sparkData = [3, 5, 4, 7, 5, 8, 6, 9, 7, 10] }: StatCardProps) => {
