@@ -1,5 +1,5 @@
-const SHELL_CACHE = "peniel-shell-v2";
-const ASSET_CACHE = "peniel-assets-v2";
+const SHELL_CACHE = "peniel-shell-v3";
+const ASSET_CACHE = "peniel-assets-v3";
 const APP_SHELL = [
   "/", "/index.html", "/manifest.webmanifest", "/church-logo.png",
   "/pwa-192.png", "/pwa-512.png", "/pwa-maskable-512.png", "/apple-touch-icon.png", "/favicon.ico",
