@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { sendSms } from "@/api/sms";
+import { isSmsProviderFailure, sendSms } from "@/api/sms";
 import { useConfirm } from "@/components/shared/ConfirmProvider";
 
 type SmsQuickSendDialogProps = {
@@ -58,16 +58,26 @@ const SmsQuickSendDialog = ({
       confirmText: "Send",
     });
     if (!ok) return;
-    await sendSms({
-      recipientType,
-      recipientId: recipientType === "individual" || recipientType === "department" || recipientType === "committee" ? recipientId : undefined,
-      recipientIds: recipientType === "selected" ? normalizedRecipientIds : undefined,
-      greeting: greeting.trim() || undefined,
-      message,
-      personalize,
-      sendMode,
-      timeToSend: sendMode === "scheduled" ? scheduledAt.replace("T", " ") : undefined,
-    });
+    let sendResult;
+    try {
+      sendResult = await sendSms({
+        recipientType,
+        recipientId: recipientType === "individual" || recipientType === "department" || recipientType === "committee" ? recipientId : undefined,
+        recipientIds: recipientType === "selected" ? normalizedRecipientIds : undefined,
+        greeting: greeting.trim() || undefined,
+        message,
+        personalize,
+        sendMode,
+        timeToSend: sendMode === "scheduled" ? scheduledAt.replace("T", " ") : undefined,
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Network provider error. Please contact support.");
+      return;
+    }
+    if (isSmsProviderFailure(sendResult.data)) {
+      toast.error("Network provider error. Please contact support.");
+      return;
+    }
     toast.success("SMS sent successfully!");
     setMessage("");
     setGreeting("");

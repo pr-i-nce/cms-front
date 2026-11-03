@@ -187,10 +187,17 @@ const markStale = <T,>(value: ApiResponse<T>, path: string): ApiResponse<T> => {
 };
 
 let refreshInFlight: Promise<{ expiresAt: string } | null> | null = null;
+let authRequestEpoch = 0;
+
+export const resetAuthRequestState = () => {
+  authRequestEpoch += 1;
+  refreshInFlight = null;
+};
 
 const refreshSession = async () => {
   if (!refreshInFlight) {
-    refreshInFlight = fetchOnce(buildUrl("/api/auth/refresh"), {
+    const requestEpoch = authRequestEpoch;
+    const refreshPromise = fetchOnce(buildUrl("/api/auth/refresh"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -198,6 +205,7 @@ const refreshSession = async () => {
     })
       .then(async (res) => {
         const payload = await parseResponse<{ expiresAt: string; csrfToken?: string }>(res);
+        if (requestEpoch !== authRequestEpoch) return null;
         if (res.status >= 500) {
           throw new ApiRequestFailure("The session service is temporarily unavailable.", res.status, true, false);
         }
@@ -211,8 +219,9 @@ const refreshSession = async () => {
         return { expiresAt };
       })
       .finally(() => {
-        refreshInFlight = null;
+        if (refreshInFlight === refreshPromise) refreshInFlight = null;
       });
+    refreshInFlight = refreshPromise;
   }
   return refreshInFlight;
 };
@@ -220,6 +229,7 @@ const refreshSession = async () => {
 const request = async <T>(method: string, path: string, body?: unknown, params?: Record<string, string | number | undefined>, bypassCache = false) => {
   const url = buildUrl(path, params);
   const requestEpoch = cacheEpoch;
+  const requestAuthEpoch = authRequestEpoch;
   const cacheKey = `${requestEpoch}:${method}:${url}`;
   const cacheable = method === "GET" && !path.startsWith("/api/auth/");
   let staleEntry: CacheEntry | undefined;
@@ -277,7 +287,11 @@ const request = async <T>(method: string, path: string, body?: unknown, params?:
   const fetchPromise = doFetch().then(async (res) => {
     const payload = await parseResponse<T>(res);
     if (!res.ok || !payload.success) {
-      if (res.status === 401 || payload.error?.code?.includes("401") || payload.message === "SESSION_EXPIRED") {
+      const canRefreshSession = !path.startsWith("/api/auth/") && !path.startsWith("/api/metrics/");
+      if ((res.status === 401 || payload.error?.code?.includes("401") || payload.message === "SESSION_EXPIRED") && canRefreshSession) {
+        if (requestAuthEpoch !== authRequestEpoch) {
+          throw new ApiRequestFailure(payload.error?.details || payload.message, res.status);
+        }
         authenticationRequired = true;
         let refreshed: { expiresAt: string } | null;
         try {
@@ -285,6 +299,9 @@ const request = async <T>(method: string, path: string, body?: unknown, params?:
         } catch {
           authenticationRequired = true;
           throw new ApiRequestFailure("Your session could not be verified because the server is unreachable.", null, true, false);
+        }
+        if (requestAuthEpoch !== authRequestEpoch) {
+          throw new ApiRequestFailure("Your session changed while this request was running. Please retry.", res.status);
         }
         if (refreshed) {
           return doFetch().then(async (retryRes) => {

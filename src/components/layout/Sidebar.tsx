@@ -6,6 +6,7 @@ import {
 import { cn } from "@/lib/utils";
 import { usePermissions } from "@/lib/permissions";
 import { useAuth } from "@/lib/useAuth";
+import { logout } from "@/api/auth";
 
 const navItems = [
   { label: "Dashboard", path: "/", icon: LayoutDashboard },
@@ -84,6 +85,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
       <div className="space-y-1 border-t border-sidebar-border px-3 pb-4 pt-3">
         <button
           onClick={() => {
+            void logout().catch(() => {});
             clearAuth();
             navigate("/login", { replace: true });
           }}

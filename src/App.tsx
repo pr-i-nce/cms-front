@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -12,6 +12,7 @@ import ScreenLoading from "@/components/shared/ScreenStates";
 import { ConfirmProvider } from "@/components/shared/ConfirmProvider";
 import UiLatencyTracker from "@/components/shared/UiLatencyTracker";
 import { AuthProvider } from "@/lib/auth";
+import { useAuth } from "@/lib/useAuth";
 import { store } from "@/store/store";
 
 const Login = lazy(() => import("./pages/Login"));
@@ -41,6 +42,20 @@ const ProtectedScreen = ({ children }: { children: React.ReactNode }) => (
   </RequireAuth>
 );
 
+const HomeRoute = () => {
+  const { user, ready, authUnavailable } = useAuth();
+  if (!ready) return <ScreenLoading label="Checking your session" />;
+  if (!user && !authUnavailable) return <Login />;
+  return <ProtectedScreen><Index /></ProtectedScreen>;
+};
+
+const LoginRoute = () => {
+  const { user, ready } = useAuth();
+  if (!ready) return <ScreenLoading label="Checking your session" />;
+  if (user) return <Navigate to="/" replace />;
+  return <Login />;
+};
+
 const App = () => (
   <Provider store={store}>
     <AuthProvider>
@@ -54,8 +69,8 @@ const App = () => (
             <ScreenErrorBoundary>
               <Suspense fallback={<ScreenLoading label="Opening workspace" />}>
                 <Routes>
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/" element={<ProtectedScreen><Index /></ProtectedScreen>} />
+                  <Route path="/login" element={<LoginRoute />} />
+                  <Route path="/" element={<HomeRoute />} />
                   <Route path="/membership" element={<ProtectedScreen><Membership /></ProtectedScreen>} />
                   <Route path="/membership/department/:id" element={<ProtectedScreen><DepartmentPage /></ProtectedScreen>} />
                   <Route path="/membership/committee/:id" element={<ProtectedScreen><CommitteePage /></ProtectedScreen>} />

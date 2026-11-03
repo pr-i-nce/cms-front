@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { me } from "@/api/auth";
-import { ApiRequestFailure, clearApiCache } from "@/lib/api";
+import { ApiRequestFailure, clearApiCache, resetAuthRequestState } from "@/lib/api";
 import { getApiBaseUrl } from "@/lib/apiBase";
 import { AuthContext, type Member } from "@/lib/authContext";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -55,6 +55,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [dispatch]);
 
   const clearAuthState = useCallback(() => {
+    resetAuthRequestState();
     authSnapshotRef.current = { user: null, permissions: [] };
     clearApiCache();
     localStorage.removeItem(LOCAL_USER_KEY);

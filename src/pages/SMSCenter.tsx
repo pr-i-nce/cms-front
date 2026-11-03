@@ -19,7 +19,7 @@ import { useConfirm } from "@/components/shared/ConfirmProvider";
 import { listMembers, listPastors } from "@/api/members";
 import { listDepartments, listDepartmentAssignments } from "@/api/departments";
 import { listCommittees, listCommitteeMembers } from "@/api/committees";
-import { getSmsBalance, listSms, listSmsSegments, listSmsTemplates, sendSms } from "@/api/sms";
+import { getSmsBalance, isSmsProviderFailure, listSms, listSmsSegments, listSmsTemplates, sendSms } from "@/api/sms";
 import { usePermissions } from "@/lib/permissions";
 import { ScreenError, ScreenLoading } from "@/components/shared/ScreenStates";
 
@@ -502,21 +502,36 @@ const SMSCenter = () => {
       confirmText: "Send",
     });
     if (!ok) return;
-    await sendSms({
-      recipientType,
-      recipientId: recipientType === "individual" || recipientType === "department" || recipientType === "committee" ? recipient : undefined,
-      recipientIds: recipientType === "selected" || recipientType === "pastors" ? selectedRecipients : undefined,
-      recipientCategory: recipientType === "category" ? recipient : undefined,
-      customNumber: recipientType === "custom" ? recipient : undefined,
-      greeting: greeting.trim() || undefined,
-      message,
-      personalize,
-      sendMode: computedSendMode,
-      timeToSend: computedSendMode === "scheduled" ? timeToSend : undefined,
-    });
-    const smsRes = await listSms({ page: 1, pageSize: PAGE_SIZE });
-    setSmsRecords(smsRes.data);
-    setSmsTotal(smsRes.meta?.pagination?.total ?? smsRes.data.length);
+    let sendResult;
+    try {
+      sendResult = await sendSms({
+        recipientType,
+        recipientId: recipientType === "individual" || recipientType === "department" || recipientType === "committee" ? recipient : undefined,
+        recipientIds: recipientType === "selected" || recipientType === "pastors" ? selectedRecipients : undefined,
+        recipientCategory: recipientType === "category" ? recipient : undefined,
+        customNumber: recipientType === "custom" ? recipient : undefined,
+        greeting: greeting.trim() || undefined,
+        message,
+        personalize,
+        sendMode: computedSendMode,
+        timeToSend: computedSendMode === "scheduled" ? timeToSend : undefined,
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Network provider error. Please contact support.");
+      return;
+    }
+    const providerFailed = isSmsProviderFailure(sendResult.data);
+    try {
+      const smsRes = await listSms({ page: 1, pageSize: PAGE_SIZE });
+      setSmsRecords(smsRes.data);
+      setSmsTotal(smsRes.meta?.pagination?.total ?? smsRes.data.length);
+    } catch {
+      // The send result remains authoritative; a failed history refresh should not turn it into success.
+    }
+    if (providerFailed) {
+      toast.error("Network provider error. Please contact support.");
+      return;
+    }
     if (personalize && resolvedRecipients.length > 1) {
       toast.success(`SMS queued for ${resolvedRecipients.length} recipients (personalized)`);
     } else {
