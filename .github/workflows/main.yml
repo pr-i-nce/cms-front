@@ -1,4 +1,4 @@
-name: Deploy Frontend to cPanel
+name: Build Frontend
 
 on:
   push:
@@ -17,7 +17,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
 
       - name: Install dependencies
         run: npm ci
@@ -27,12 +26,10 @@ jobs:
         env:
           VITE_API_URL: https://cms.penielchristianchurchkitui.com
 
-      - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: ${{ secrets.FTP_PORT || 21 }}
-          local-dir: ./dist/
-          server-dir: ./DWH-CMS_FRONT/
+          name: cms-frontend-build
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
