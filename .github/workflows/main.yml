@@ -17,12 +17,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build project
-        run: npm run build 
+        run: npm run build
         env:
           VITE_API_URL: https://cms.penielchristianchurchkitui.com
 
@@ -33,6 +34,6 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: ${{ secrets.FTP_PORT || 21 }}
-          local-dir: ./dist/ 
-          server-dir: ./ 
+          local-dir: ./dist/
+          server-dir: ./cms.peniel/DWH-CMS_FRONT/
           delete-removed: false
