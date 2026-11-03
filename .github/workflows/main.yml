@@ -27,13 +27,16 @@ jobs:
         env:
           VITE_API_URL: https://cms.penielchristianchurchkitui.com
 
-      - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      - name: Deploy UI via SFTP
+        uses: wangyucode/sftp-upload-action@v3
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: ${{ secrets.FTP_PORT || 21 }}
-          local-dir: ./dist/
-          server-dir: ./cms.peniel/DWH-CMS_FRONT/
-          delete-removed: false
+          host: ${{ secrets.SFTP_HOST }}
+          port: ${{ secrets.SFTP_PORT || 22 }}
+          username: ${{ secrets.SFTP_USERNAME }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          privateKey: ${{ secrets.SFTP_PRIVATE_KEY }}
+          passphrase: ${{ secrets.SFTP_PASSPHRASE }}
+          localDir: dist
+          remoteDir: /home/penielch/cms.peniel/DWH-CMS_FRONT
+          removeExtraFilesOnServer: false
+          concurrency: 4
